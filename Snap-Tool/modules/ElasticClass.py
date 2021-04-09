@@ -193,6 +193,30 @@ class Elastic:
 			self.logger.createLogTool(str(exception), 4)
 
 	"""
+	Method that mounts a snapshot created as a searchable snapshot.
+
+	Parameters:
+	self -- An instantiated object of the Elastic class.
+	conn_es -- Object that contains the connection to ElasticSearch.
+	repository_name -- Name of the repository where the snapshot to mount is located.
+	snapshot_name -- Name of the snapshot to mount.
+	form_dialog -- A FormDialogs class object.
+
+	Exceptions:
+	exceptions.NotFoundError -- Exception representing a 404 status code.
+	exceptions.AuthorizationException -- Exception representing a 403 status code.
+	"""
+	def mountSearchableSnapshots(self, conn_es, repository_name, snapshot_name, form_dialog):
+		try:
+			conn_es.searchable_snapshots.mount(repository = repository_name, snapshot = snapshot_name, body = { "index" : snapshot_name }, wait_for_completion = True)
+		except exceptions.NotFoundError as exception:
+			form_dialog.d.msgbox("\nRepository not found", 7, 50, title = "Error message")
+			self.logger.createLogTool(str(exception), 4)
+		except exceptions.AuthorizationException as exception:
+			form_dialog.d.msgbox("\nFeature not supported for this type of license. 'Enterprise' license required", 7, 50, title = "Error message")
+			self.logger.createLogTool(str(exception), 4)
+
+	"""
 	Method that obtains the list of existing indices in ElasticSearch.
 
 	Parameters:

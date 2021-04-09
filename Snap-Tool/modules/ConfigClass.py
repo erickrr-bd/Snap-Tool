@@ -66,6 +66,169 @@ class Configuration:
 		else:
 			form_dialog.d.msgbox("\nError creating configuration file", 7, 50, title = "Error message")
 		form_dialog.mainMenu()
+	
+	"""
+	Method that modifies one or more fields of the Snap-Tool configuration file.
+
+	Parameters:
+	self -- An instantiated object of the Configuration class.
+	form_dialog -- A FormDialogs class object.
+
+	Exceptions:
+	KeyError -- A Python KeyError exception is what is raised when you try to access a key that isn’t in a dictionary (dict). 
+	"""
+	def modifyConfiguration(self, form_dialog):
+		options_conf_prop = [("Version", "ElasticSearch Version", 0),
+							("Host", "ElasticSearch Host", 0),
+							("Port", "ElasticSearch Port", 0),
+							("Use SSL/TLS", "Enable or disable SSL/TLS connection", 0),
+							("Use HTTP auth", "Enable or disable Http authentication", 0),
+							("Repository name", "Snapshot repository", 0),
+							("Index name", "Index name for logs", 0),
+							("Bot token", "Telegram bot token", 0),
+							("Chat ID", "Telegram chat ID", 0)]
+
+		options_ssl_true = [("To disable", "Disable SSL/TLS communication", 0),
+							("Modify", "Modify certificate validation", 0)]
+
+		options_ssl_false = [("Enable", "Enable SSL/TLS communication", 0)]
+
+		options_valid_cert_true = [("To disable", "Disable certificate validation", 0)]
+
+		options_valid_cert_false = [("Enable", "Enable certificate validation", 0)]
+
+		options_http_auth_true = [("To disable", "Disable HTTP Authentication", 0),
+								 ("Modify data", "Modify HTTP Authentication data", 0)]
+
+		options_http_auth_false = [("Enable", "Enable HTTP Authentication", 0)]
+
+		options_http_auth_data = [("Username", "Username for HTTP Authentication", 0),
+								 ("Password", "User password", 0)]
+
+		flag_version = 0
+		flag_host = 0
+		flag_port = 0
+		flag_use_ssl = 0
+		flag_http_auth = 0
+		flag_index_name = 0
+		flag_repository_name = 0
+		flag_bot_token = 0
+		flag_chat_id = 0
+		with open(self.utils.getPathSTool('conf') + '/es_conf.yaml', "rU") as f:
+			data_conf = yaml.safe_load(f)
+		hash_origen = self.utils.getSha256File(self.utils.getPathSTool('conf') + '/es_conf.yaml')
+		opt_conf_prop = form_dialog.getDataCheckList("Select one or more options", options_conf_prop, "Update configuration file")
+		for opt_prop in opt_conf_prop:
+			if opt_prop == "Version":
+				flag_version = 1
+			if opt_prop == "Host":
+				flag_host = 1
+			if opt_prop == "Port":
+				flag_port = 1
+			if opt_prop == "Use SSL/TLS":
+				flag_use_ssl = 1
+			if opt_prop == "Validate certificates":
+				flag_validate_cert = 1
+			if opt_prop == "Use HTTP auth":
+				flag_http_auth = 1
+			if opt_prop == "Repository name":
+				flag_repository_name = 1
+			if opt_prop == "Index name":
+				flag_index_name = 1
+			if opt_prop == "Bot token":
+				flag_bot_token = 1
+			if opt_prop == "Chat ID":
+				flag_chat_id = 1
+		try:
+			if flag_version == 1:
+				version_es = form_dialog.getDataNumberDecimal("Enter the ElasticSearch version:", str(data_conf['es_version']))
+				data_conf['es_version'] = str(version_es)
+			if flag_host == 1:
+				host_es = form_dialog.getDataIP("Enter the ElasticSearch IP address:", str(data_conf['es_host']))
+				data_conf['es_host'] = str(host_es)
+			if flag_port == 1:
+				port_es = form_dialog.getDataPort("Enter the ElasticSearch listening port:", str(data_conf['es_port']))
+				data_conf['es_port'] = int(port_es)
+			if flag_use_ssl == 1:
+				if data_conf['use_ssl'] == True:
+					opt_ssl_true = form_dialog.getDataRadioList("Select a option:", options_ssl_true, "Connection via SSL/TLS")
+					if opt_ssl_true == "To disable":
+						del data_conf['valid_certificates']
+						data_conf['use_ssl'] = False
+					if opt_ssl_true == "Modify":
+						if data_conf['valid_certificates'] == True:
+							opt_valid_cert_true = form_dialog.getDataRadioList("Select a option:", options_valid_cert_true, "Certificate Validation")
+							if opt_valid_cert_true == "To disable":
+								data_conf['valid_certificates'] = False
+						else:
+							opt_valid_cert_false = form_dialog.getDataRadioList("Select a option:", options_valid_cert_false, "Certificate Validation")
+							if opt_valid_cert_false == "Enable":
+								data_conf['valid_certificates'] = True
+				else:
+					opt_ssl_false = form_dialog.getDataRadioList("Select a option:", options_ssl_false, "Connection via SSL/TLS")
+					if opt_ssl_false == "Enable":
+						data_conf['use_ssl'] = True
+						valid_certificates = form_dialog.getDataYesOrNo("\nDo you want the certificates for SSL/TLS communication to be validated?", "Certificate Validation")
+						if valid_certificates == "ok":
+							valid_certificates_json = { 'valid_certificates' : True }
+						else:
+							valid_certificates_json = { 'valid_certificates' : False }
+						data_conf.update(valid_certificates_json)
+			if flag_http_auth == 1:
+				if data_conf['use_http_auth'] == True:
+					opt_http_auth_true = form_dialog.getDataRadioList("Select a option:", options_http_auth_true, "HTTP Authentication")
+					if opt_http_auth_true == "To disable":
+						del(data_conf['http_auth_user'])
+						del(data_conf['http_auth_pass'])
+						data_conf['use_http_auth'] = False
+					if opt_http_auth_true == "Modify data":
+						flag_http_auth_user = 0
+						flag_http_auth_pass = 0
+						opt_mod_http_auth = form_dialog.getDataCheckList("Select one or more options:", options_http_auth_data, "HTTP Authentication")
+						for opt_mod in opt_mod_http_auth:
+							if opt_mod == "Username":
+								flag_http_auth_user = 1
+							if opt_mod == "Password":
+								flag_http_auth_pass = 1
+						if flag_http_auth_user == 1:
+							user_http_auth_mod = self.utils.encryptAES(form_dialog.getDataInputText("Enter the username for HTTP authentication:", self.utils.decryptAES(data_conf['http_auth_user']).decode('utf-8')))
+							data_conf['http_auth_user'] = user_http_auth_mod.decode('utf-8')
+						if flag_http_auth_pass == 1:
+							pass_http_auth_mod = self.utils.encryptAES(form_dialog.getDataPassword("Enter the user's password for HTTP authentication:", "password"))
+							data_conf['http_auth_pass'] = pass_http_auth_mod.decode('utf-8')
+				else:
+					opt_http_auth_false = form_dialog.getDataRadioList("Select a option:", options_http_auth_false, "HTTP Authentication")
+					if opt_http_auth_false == "Enable":
+						user_http_auth = self.utils.encryptAES(form_dialog.getDataInputText("Enter the username for HTTP authentication:", "user_http"))
+						pass_http_auth = self.utils.encryptAES(form_dialog.getDataPassword("Enter the user's password for HTTP authentication:", "password"))
+						http_auth_data = {'http_auth_user': user_http_auth.decode('utf-8'), 'http_auth_pass': pass_http_auth.decode('utf-8')}
+						data_conf.update(http_auth_data)
+						data_conf['use_http_auth'] = True
+			if flag_index_name == 1:
+				write_index = form_dialog.getDataInputText("Enter the name of the index that will be created in ElasticSearch:", str(data_conf['writeback_index']))
+				data_conf['writeback_index'] = str(write_index)
+			if flag_repository_name == 1:
+				repository_name = form_dialog.getDataInputText("Enter the name of the repository where the created snapshots will be saved:", str(data_conf['repository_name']))
+				data_conf['repository_name'] = str(repository_name)
+			if flag_bot_token == 1:
+				telegram_bot_token = self.utils.encryptAES(form_dialog.getDataInputText("Enter the Telegram bot token:", self.utils.decryptAES(data_conf['telegram_bot_token']).decode('utf-8')))
+				data_conf['telegram_bot_token'] = telegram_bot_token.decode('utf-8')
+			if flag_chat_id == 1:
+				telegram_chat_id = self.utils.encryptAES(form_dialog.getDataInputText("Enter the Telegram channel identifier:", self.utils.decryptAES(data_conf['telegram_chat_id']).decode('utf-8')))
+				data_conf['telegram_chat_id'] = telegram_chat_id.decode('utf-8')
+			with open(self.utils.getPathSTool('conf') + '/es_conf.yaml', "w") as file_update:
+				yaml.safe_dump(data_conf, file_update, default_flow_style = False)
+			hash_modify = self.utils.getSha256File(self.utils.getPathSTool('conf') + '/es_conf.yaml')
+			if hash_origen == hash_modify:
+				form_dialog.d.msgbox("\nConfiguration file not modified", 7, 50, title = "Notification message")
+			else:
+				form_dialog.d.msgbox("\nModified configuration file", 7, 50, title = "Notification message")
+				self.logger.createLogTool("Modified configuration file", 2)
+			form_dialog.mainMenu()	
+		except KeyError as exception:
+			self.logger.createLogTool("Key Error: " + str(exception), 4)
+			form_dialog.d.msgbox("\nKey Error: " + str(exception), 7, 50, title = "Error message")
+			form_dialog.mainMenu()	
 
 	"""
 	Method that creates the YAML file with the data entered for the Telk-Alert configuration file.

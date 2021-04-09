@@ -1,4 +1,5 @@
 import os
+import sys
 import yaml
 from Crypto import Random
 from hashlib import sha256
@@ -97,6 +98,29 @@ class Utils:
 		if(not regular_expression.match(data)):
 			return False
 		return True
+
+	"""
+	Method that obtains the hash of a particular file.
+
+	Parameters:
+	self -- An instantiated object of the Utils class.
+	file -- Path of the file from which the hash function will be obtained.
+
+	Return:
+	Hash obtained.
+
+	Exceptions:
+	Exception -- Thrown when any mistake happens.
+	"""
+	def getSha256File(self, file):
+		try:
+			hashsha = sha256()
+			with open(file, "rb") as file_hash:
+				for block in iter(lambda: file_hash.read(4096), b""):
+					hashsha.update(block)
+			return hashsha.hexdigest()
+		except Exception as exception:
+			self.logger.createLogTool("Error: " + str(exception), 4)
 
 	"""
 	Method that encrypts a text string.

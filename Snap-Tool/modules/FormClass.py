@@ -72,6 +72,19 @@ class FormDialogs:
 			sys.exit(0)
 
 	"""
+	Method that generates the message interface with scroll box.
+
+	Parameters:
+	self -- An instantiated object of the FormDialogs class.
+	text -- Text that will be shown to the user.
+	title -- Title that will be given to the interface and that will be shown to the user.
+	"""
+	def getScrollBox(self, text, title):
+		code_sb = self.d.scrollbox(text, 15, 70, title = title)
+		if code_sb == self.d.OK:
+			self.mainMenu()
+
+	"""
 	Method that generates the interface with a list of options, where only one can be chosen.
 
 	Parameters:
@@ -269,8 +282,7 @@ class FormDialogs:
 		else:
 			opt_conf_true = self.getDataRadioList("Select a option", self.options_conf_true, "Configuration options")
 			if opt_conf_true == "Modify configuration":
-				print("SI hay archivo")
-				#self.create_conf.modifyConfiguration(FormDialogs())
+				self.configuration.modifyConfiguration(FormDialogs())
 
 	"""
 	Method that obtains the list of indexes and select one of them to create a snapshot of it.
@@ -285,16 +297,20 @@ class FormDialogs:
 		snap_tool_conf = self.utils.readFileYaml(self.utils.getPathSTool('conf') + '/es_conf.yaml')
 		conn_es = self.elastic.getConnectionElastic(snap_tool_conf, FormDialogs())
 		list_indices = self.elastic.getIndices(conn_es)
-		option_index = self.getDataRadioList("Select a option:", list_indices, "ElasticSearch Indexes")
 		try:
-			self.elastic.createSnapshot(conn_es, snap_tool_conf['repository_name'], option_index, FormDialogs())
-			status_snapshot = self.elastic.getStatusSnapshot(conn_es, snap_tool_conf['repository_name'], option_index)
-			if status_snapshot == 'SUCCESS':
-				self.d.msgbox("\nSnapshot created", 7, 50, title = "Notification message")
-				delete_index = self.getDataYesOrNo("\nDo you want to delete the index that was backed up in the snapshot?", "Delete Index")
-				if delete_index == "ok":
-					self.elastic.deleteIndex(conn_es, option_index)
-					self.d.msgbox("\nThe index has been removed", 7, 50, title = "Notification message")
+			if len(list_indices) == 0:
+				self.d.msgbox("\nThere are no indexes", 7, 50, title = "Notification message")
+			else:
+				option_index = self.getDataRadioList("Select a option:", list_indices, "ElasticSearch Indexes")
+				self.elastic.createSnapshot(conn_es, snap_tool_conf['repository_name'], option_index, FormDialogs())
+				status_snapshot = self.elastic.getStatusSnapshot(conn_es, snap_tool_conf['repository_name'], option_index)
+				if status_snapshot == 'SUCCESS':
+					self.d.msgbox("\nSnapshot created. Index:\n- " + option_index, 7, 50, title = "Notification message")
+					delete_index = self.getDataYesOrNo("\nDo you want to delete the index that was backed up in the snapshot?\n\n- " + option_index, "Delete Index")
+					if delete_index == "ok":
+						self.elastic.deleteIndex(conn_es, option_index)
+						self.d.msgbox("\nThe index has been removed", 7, 50, title = "Notification message")
+			self.mainMenu()
 		except KeyError as exception:
 			self.d.msgbox("\nKey Error: " + str(exception), 7, 50, title = "Error message")
 			self.logger.createLogTool("Key Error: " + str(exception), 4)
@@ -314,16 +330,58 @@ class FormDialogs:
 		conn_es = self.elastic.getConnectionElastic(snap_tool_conf, FormDialogs())
 		try:
 			list_snapshots = self.elastic.getSnapshots(conn_es, snap_tool_conf['repository_name'], FormDialogs())
-			option_snapshot = self.getDataCheckList("Select a option:", list_snapshots, "ElasticSearch Snapshots")
-			delete_snapshot = self.getDataYesOrNo("\nAre you sure to delete the selected snapshot (s)?\n\n- " + ",".join(option_snapshot), "Delete Snapshot")
-			if delete_snapshot == "ok":
-				for snapshot in option_snapshot:
-					self.elastic.deleteSnapshot(conn_es, snap_tool_conf['repository_name'], snapshot, FormDialogs())
-				self.d.msgbox("\nThe snapshot (s) have been deleted", 7, 50, title = "Notification message")
+			if len(list_snapshots) == 0:
+				self.d.msgbox("\nThere are no snapshots to delete", 7, 50, title = "Notification message")
+			else:
+				option_snapshot = self.getDataCheckList("Select a option:", list_snapshots, "ElasticSearch Snapshots")
+				delete_snapshot = self.getDataYesOrNo("\nAre you sure to delete the selected snapshot (s)?\n\n- " + ", ".join(option_snapshot), "Delete Snapshot")
+				if delete_snapshot == "ok":
+					for snapshot in option_snapshot:
+						self.elastic.deleteSnapshot(conn_es, snap_tool_conf['repository_name'], snapshot, FormDialogs())
+					self.d.msgbox("\nThe snapshot (s) have been deleted", 7, 50, title = "Notification message")
+			self.mainMenu()
 		except KeyError as exception:
 			self.d.msgbox("\nKey Error: " + str(exception), 7, 50, title = "Error message")
 			self.logger.createLogTool("Key Error: " + str(exception), 4)
 			sys.exit(1)
+
+	"""
+	Method that obtains the list of created snapshots allows selecting one and mounting it as a searchable snapshot.
+
+	Parameters:
+	self -- An instantiated object of the FormDialogs class.
+
+	Exceptions:
+	KeyError -- A Python KeyError exception is what is raised when you try to access a key that isn’t in a dictionary (dict). 
+	"""
+	def getCreateSearchSnapshot(self):
+		snap_tool_conf = self.utils.readFileYaml(self.utils.getPathSTool('conf') + '/es_conf.yaml')
+		conn_es = self.elastic.getConnectionElastic(snap_tool_conf, FormDialogs())
+		if float(snap_tool_conf['es_version']) < 7.0:
+			self.d.msgbox("\nElasticSearch version not supported", 7, 50, title = "Error message")
+		else:
+			try:
+				list_snapshots = self.elastic.getSnapshots(conn_es, snap_tool_conf['repository_name'], FormDialogs())
+				if len(list_snapshots) == 0:
+					self.d.msgbox("\nThere are no snapshots to delete", 7, 50, title = "Notification message")
+				else:
+					option_snapshot = self.getDataRadioList("Select a option:", list_snapshots, "ElasticSearch Snapshots")
+					self.elastic.mountSearchableSnapshots(conn_es, snap_tool_conf['repository_name'], option_snapshot, FormDialogs())
+			except KeyError as exception:
+				self.d.msgbox("\nKey Error: " + str(exception), 7, 50, title = "Error message")
+				self.logger.createLogTool("Key Error: " + str(exception), 4)
+				sys.exit(1)
+
+	"""
+	Method that displays a message on the screen with information about the application.
+
+	Parameters:
+	self -- An instantiated object of the FormDialogs class.
+	"""
+	def getAbout(self):
+		message = "\nCopyright@2021 Tekium. All rights reserved.\nSnap-Tool v3.0\nAuthor: Erick Rodriguez erickrr.tbd93@gmail.com\n" + "License: GPLv3\n\nSnap-Tool is a tool that allows the management of snaphots in\nElasticSearch through a graphical interface."
+		self.getScrollBox(message, "About")
+
 
 	"""
 	Method that launches an action based on the option chosen in the main menu.
@@ -339,6 +397,10 @@ class FormDialogs:
 			self.getCreateSnapshot()
 		if option == 3:
 			self.getDeleteSnapshot()
+		if option == 4:
+			self.getCreateSearchSnapshot()
+		if option == 5:
+			self.getAbout()
 		if option == 6:
 			sys.exit(0)
 
