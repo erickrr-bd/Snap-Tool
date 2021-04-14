@@ -113,7 +113,7 @@ class Elastic:
 	"""
 	def createSnapshot(self, conn_es, repository_name, index_name, form_dialog):
 		try:
-			conn_es.snapshot.create(repository = repository_name, snapshot = index_name, body = { "indices": index_name }, wait_for_completion = True)
+			conn_es.snapshot.create(repository = repository_name, snapshot = index_name, body = { "indices": index_name }, wait_for_completion = True, request_timeout = 7200)
 		except exceptions.RequestError as exception:
 			form_dialog.d.msgbox("\nThe snapshot already exists", 7, 50, title = "Error message")
 			self.logger.createLogTool(str(exception), 4)
@@ -130,6 +130,7 @@ class Elastic:
 	conn_es -- Object that contains the connection to ElasticSearch.
 	repository_name -- Name of the repository where the snapshots will be saved.
 	snapshot_name -- Name of the snapshot from which its status will be validated.
+	form_dialog -- A FormDialogs class object.
 
 	Return:
 	status_snapshot -- Current state of the snapshot.
@@ -137,11 +138,35 @@ class Elastic:
 	Exceptions:
 	exceptions.NotFoundError -- Exception representing a 404 status code.
 	"""
-	def getStatusSnapshot(self, conn_es, repository_name, snapshot_name):
+	def getStatusSnapshot(self, conn_es, repository_name, snapshot_name, form_dialog):
 		try:
 			status_aux = conn_es.snapshot.status(repository = repository_name, snapshot = snapshot_name)
 			status_snapshot = status_aux['snapshots'][0]['state']
 			return status_snapshot
+		except exceptions.NotFoundError as exception:
+			form_dialog.d.msgbox("\nRepository not found", 7, 50, title = "Error message")
+			self.logger.createLogTool(str(exception), 4)
+
+	"""
+	Method that obtains the final status of a snapshot.
+
+	Parameters:
+	self -- An instantiated object of the Elastic class.
+	conn_es -- Object that contains the connection to ElasticSearch.
+	repository_name -- Name of the repository where the snapshots will be saved.
+	snapshot_name -- Name of the snapshot from which its status will be validated.
+	form_dialog -- A FormDialogs class object.
+
+	Return:
+	status_aux -- Current state of the snapshot.
+
+	Exceptions:
+	exceptions.NotFoundError -- Exception representing a 404 status code.
+	"""
+	def getStatus(self, conn_es, repository_name, snapshot_name, form_dialog):
+		try:
+			status_aux = conn_es.snapshot.get(repository = repository_name, snapshot = snapshot_name)
+			return status_aux
 		except exceptions.NotFoundError as exception:
 			form_dialog.d.msgbox("\nRepository not found", 7, 50, title = "Error message")
 			self.logger.createLogTool(str(exception), 4)
@@ -163,10 +188,14 @@ class Elastic:
 	"""
 	def getSnapshots(self, conn_es, repository_name, form_dialog):
 		list_snapshots = []
+		list_aux = []		
 		try:
 			list_snapshots_aux = conn_es.snapshot.get(repository = repository_name, snapshot = '_all')
 			for snapshots_aux in list_snapshots_aux['snapshots']:
-				list_snapshots.append((snapshots_aux['snapshot'], "Snapshot Name", 0))
+				list_aux.append(snapshots_aux['snapshot'])
+			list_aux = sorted(list_aux)
+			for snapshot in list_aux:
+				list_snapshots.append((snapshot, "Snapshot Name", 0))
 			return list_snapshots
 		except exceptions.NotFoundError as exception:
 			form_dialog.d.msgbox("\nRepository not found", 7, 50, title = "Error message")
@@ -187,7 +216,7 @@ class Elastic:
 	"""
 	def deleteSnapshot(self, conn_es, repository_name, snapshot_name, form_dialog):
 		try:
-			conn_es.snapshot.delete(repository = repository_name, snapshot = snapshot_name)
+			conn_es.snapshot.delete(repository = repository_name, snapshot = snapshot_name, request_timeout = 7200)
 		except exceptions.NotFoundError as exception:
 			form_dialog.d.msgbox("\nRepository not found", 7, 50, title = "Error message")
 			self.logger.createLogTool(str(exception), 4)
@@ -208,7 +237,7 @@ class Elastic:
 	"""
 	def mountSearchableSnapshots(self, conn_es, repository_name, snapshot_name, form_dialog):
 		try:
-			conn_es.searchable_snapshots.mount(repository = repository_name, snapshot = snapshot_name, body = { "index" : snapshot_name }, wait_for_completion = True)
+			conn_es.searchable_snapshots.mount(repository = repository_name, snapshot = snapshot_name, body = { "index" : snapshot_name }, wait_for_completion = True, request_timeout = 7200)
 		except exceptions.NotFoundError as exception:
 			form_dialog.d.msgbox("\nRepository not found", 7, 50, title = "Error message")
 			self.logger.createLogTool(str(exception), 4)

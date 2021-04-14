@@ -48,59 +48,48 @@ class Telegram:
 		return int(status_code)
 
 	"""
-	Method that generates the header of the message that will be sent by telegram.
+	Method that generates the message that will be sent by Telegram.
 
 	Parameters:
 	self -- An instantiated object of the Telegram class.
-	rule_yaml -- List with all the data of the alert rule.
-	time_back -- Backward time in milliseconds of the alert rule.
+	action -- Action performed.
+	snapshot_name -- Name of the snapshot.
 
 	Return: 
-	header -- Alert header in string.
-
-	Exceptions:
-	KeyError -- A Python KeyError exception is what is raised when you try to access a key that isn’t in a dictionary (dict). 
+	message -- Character string with the formed message.
 	"""
-	def getTelegramHeader(self, rule_yaml, time_back):
-		try:
-			header = u'\u26A0\uFE0F' + " " + rule_yaml['name_rule'] +  " " + u'\u26A0\uFE0F' + '\n\n' + u'\U0001f6a6' +  " Alert level: " + rule_yaml['alert_level'] + "\n\n" +  u'\u23F0' + " Alert sent: " + time.strftime("%c") + "\n\n\n"
-			header += "At least " + str(rule_yaml['num_events']) + " event(s) ocurred between " + self.utils.convertMillisecondsToDate(self.utils.convertDateToMilliseconds(datetime.now()) - time_back) + " and " + self.utils.convertMillisecondsToDate(self.utils.convertDateToMilliseconds(datetime.now())) + "\n\n\n"
-			return header
-		except KeyError as exception:
-			self.logger.createLogTelkAlert("Key Error: " + str(exception), 4)
-			print("\nKey Error: " + str(exception))
-			sys.exit(1)
+	def getTelegramMessage(self, action, snapshot_name):
+		message = u'\u26A0\uFE0F' + " " + 'Snap-Tool' +  " " + u'\u26A0\uFE0F' + '\n\n' + u'\u23F0' + " Alert sent: " + time.strftime("%c") + "\n\n\n"
+		if action == "create_snapshot":
+			message += u'\u2611\uFE0F' + " Action: Snapshot creation started\n"
+		if action == "end_snapshot":
+			message += u'\u2611\uFE0F' + " Action: Snapshot creation completed\n"
+		if action == "delete_snapshot":
+			message += u'\u2611\uFE0F' + " Action: Snaphot removed\n"
+		if action == "mount_snapshot":
+			message += u'\u2611\uFE0F' + " Action: Snapshot mounted as searchable snapshot\n"
+		message += u'\u2611\uFE0F' + " Snapshot name: " + snapshot_name +"\n"
+		message += u'\u2611\uFE0F' + " Index name: " + snapshot_name + "\n"
+		return message
 
 	"""
-	Method that generates the body of the message that will be sent by telegram.
+	Method that generates the message when the snapshot has finished being created.
 
 	Parameters:
 	self -- An instantiated object of the Telegram class.
-	hit -- Object that contains all the information found in the ElasticSearch search.
+	start_time -- Snapshot creation start time.
+	end_time -- Snapshot creation end time.
+	delete_index -- Whether the index was removed or not.
 
 	Return: 
-	message -- Message with the parsed data, which will be sent to Telegram.
+	message -- Character string with the formed message.
 	"""
-	def getTelegramMessage(self, hit):
-		message = "FOUND EVENT: " + '\n\n'
-		for hits in hit:
-			if not (type(hit[str(hits)]) is utils.AttrDict):
-				message += u'\u2611\uFE0F' + " " + hits + " = " + str(hit[str(hits)]) + '\n'
-			else:
-				for hits_two in hit[str(hits)]:
-					if not (type(hit[str(hits)][str(hits_two)]) is utils.AttrDict):
-						message += u'\u2611\uFE0F' + " " + hits + "." + hits_two + " = " + str(hit[str(hits)][str(hits_two)]) + '\n'
-					else:
-						for hits_three in hit[str(hits)][str(hits_two)]:
-							if not (type(hit[str(hits)][str(hits_two)][str(hits_three)]) is utils.AttrDict):
-								message += u'\u2611\uFE0F' + " " + hits + "." + hits_two + "." + hits_three + " = " + str(hit[str(hits)][str(hits_two)][str(hits_three)]) + '\n'
-							else:
-								for hits_four in hit[str(hits)][str(hits_two)][str(hits_three)]:
-									if not (type(hit[str(hits)][str(hits_two)][str(hits_three)][str(hits_four)]) is utils.AttrDict):
-										message += u'\u2611\uFE0F' + " " + hits + "." + hits_two + "." + hits_three + "." + hits_four + " = " + str(hit[str(hits)][str(hits_two)][str(hits_three)]) + '\n'
-		message += "\n\n"
-		return message								
-
+	def getMessageEndSnapshot(self, start_time, end_time, delete_index):
+		message = u'\u2611\uFE0F' + " Start time: " + str(start_time) + "\n"
+		message += u'\u2611\uFE0F' + " End time: " + str(end_time) + "\n"
+		message += u'\u2611\uFE0F' + " Delete index: " + str(delete_index)
+		return message
+	
 	"""
 	Method that prints the status of the alert delivery based on the response HTTP code.
 
@@ -110,10 +99,10 @@ class Telegram:
 	"""
 	def getStatusByTelegramCode(self, telegram_code):
 		if telegram_code == 200:
-			self.logger.createLogTool("Telegram alert sent", 2)
+			self.logger.createLogTool("Telegram message sent successfully", 2)
 		if telegram_code == 400:
-			self.logger.createLogTool("Telegram alert not sent. Bad request", 4)
+			self.logger.createLogTool("Telegram message not sent. Bad request", 4)
 		if telegram_code == 401:
-			self.logger.createLogTool("Telegram alert not sent. Unauthorized", 4)
+			self.logger.createLogTool("Telegram message not sent. Unauthorized", 4)
 		if telegram_code == 404:
-			self.logger.createLogTool("Telegram alert not sent. Not found", 4)
+			self.logger.createLogTool("Telegram message not sent. Not found", 4)
