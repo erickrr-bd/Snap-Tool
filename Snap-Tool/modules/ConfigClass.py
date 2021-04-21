@@ -38,6 +38,8 @@ class Configuration:
 			valid_certificates = form_dialog.getDataYesOrNo("\nDo you want the certificates for SSL/TLS communication to be validated?", "Certificate Validation")
 			if valid_certificates == "ok":
 				data_conf.append(True)
+				cert_file = form_dialog.getFileOrDirectory('/etc/Snap-Tool', "Select the CA certificate:")
+				data_conf.append(cert_file)
 			else:
 				data_conf.append(False)
 		else:
@@ -52,11 +54,9 @@ class Configuration:
 		else:
 			data_conf.append(False)
 		repository_name = form_dialog.getDataInputText("Enter the name of the repository where the created snapshots will be saved:", "my_repository")
-		write_index = form_dialog.getDataInputText("Enter the name of the index that will be created in ElasticSearch:", "snaptool")
 		telegram_bot_token = self.utils.encryptAES(form_dialog.getDataInputText("Enter the Telegram bot token:", "751988420:AAHrzn7RXWxVQQNha0tQUzyouE5lUcPde1g"))
 		telegram_chat_id = self.utils.encryptAES(form_dialog.getDataInputText("Enter the Telegram channel identifier:", "-1002365478941"))
 		data_conf.append(repository_name)
-		data_conf.append(write_index)
 		data_conf.append(telegram_bot_token)
 		data_conf.append(telegram_chat_id)
 		self.createFileConfiguration(data_conf)
@@ -84,7 +84,6 @@ class Configuration:
 							("Use SSL/TLS", "Enable or disable SSL/TLS connection", 0),
 							("Use HTTP auth", "Enable or disable Http authentication", 0),
 							("Repository name", "Snapshot repository", 0),
-							("Index name", "Index name for logs", 0),
 							("Bot token", "Telegram bot token", 0),
 							("Chat ID", "Telegram chat ID", 0)]
 
@@ -110,7 +109,6 @@ class Configuration:
 		flag_port = 0
 		flag_use_ssl = 0
 		flag_http_auth = 0
-		flag_index_name = 0
 		flag_repository_name = 0
 		flag_bot_token = 0
 		flag_chat_id = 0
@@ -133,8 +131,6 @@ class Configuration:
 				flag_http_auth = 1
 			if opt_prop == "Repository name":
 				flag_repository_name = 1
-			if opt_prop == "Index name":
-				flag_index_name = 1
 			if opt_prop == "Bot token":
 				flag_bot_token = 1
 			if opt_prop == "Chat ID":
@@ -154,16 +150,21 @@ class Configuration:
 					opt_ssl_true = form_dialog.getDataRadioList("Select a option:", options_ssl_true, "Connection via SSL/TLS")
 					if opt_ssl_true == "To disable":
 						del data_conf['valid_certificates']
+						del data_conf['path_cert']
 						data_conf['use_ssl'] = False
 					if opt_ssl_true == "Modify":
 						if data_conf['valid_certificates'] == True:
 							opt_valid_cert_true = form_dialog.getDataRadioList("Select a option:", options_valid_cert_true, "Certificate Validation")
 							if opt_valid_cert_true == "To disable":
+								del data_conf['path_cert']
 								data_conf['valid_certificates'] = False
 						else:
 							opt_valid_cert_false = form_dialog.getDataRadioList("Select a option:", options_valid_cert_false, "Certificate Validation")
 							if opt_valid_cert_false == "Enable":
 								data_conf['valid_certificates'] = True
+								cert_file = form_dialog.getFileOrDirectory('/etc/Snap-Tool', "Select the CA certificate:")
+								cert_file_json = { 'path_cert' : str(cert_file) }
+								data_conf.update(cert_file_json)
 				else:
 					opt_ssl_false = form_dialog.getDataRadioList("Select a option:", options_ssl_false, "Connection via SSL/TLS")
 					if opt_ssl_false == "Enable":
@@ -204,9 +205,6 @@ class Configuration:
 						http_auth_data = {'http_auth_user': user_http_auth.decode('utf-8'), 'http_auth_pass': pass_http_auth.decode('utf-8')}
 						data_conf.update(http_auth_data)
 						data_conf['use_http_auth'] = True
-			if flag_index_name == 1:
-				write_index = form_dialog.getDataInputText("Enter the name of the index that will be created in ElasticSearch:", str(data_conf['writeback_index']))
-				data_conf['writeback_index'] = str(write_index)
 			if flag_repository_name == 1:
 				repository_name = form_dialog.getDataInputText("Enter the name of the repository where the created snapshots will be saved:", str(data_conf['repository_name']))
 				data_conf['repository_name'] = str(repository_name)
@@ -247,17 +245,21 @@ class Configuration:
 			'use_ssl' : data_conf[3]}
 
 		if data_conf[3] == True:
-			valid_certificates_json = { 'valid_certificates' : data_conf[4] }
-			last_index = 4
+			if data_conf[4] == True:
+				valid_certificates_json = { 'valid_certificates' : data_conf[4] , 'path_cert' : str(data_conf[5]) }
+				last_index = 5
+			else:
+				valid_certificates_json = { 'valid_certificates' : data_conf[4] }
+				last_index = 4
 			d.update(valid_certificates_json)
 		else:
 			last_index = 3
 		if data_conf[last_index + 1] == True:
 			http_auth_json = { 'use_http_auth' : True, 'http_auth_user' : data_conf[last_index + 2].decode("utf-8"), 'http_auth_pass' : data_conf[last_index + 3].decode("utf-8") }
-			data_aux_json = { 'repository_name' : str(data_conf[last_index + 4]), 'writeback_index' : str(data_conf[last_index + 5]), 'telegram_bot_token' : data_conf[last_index + 6].decode('utf-8'), 'telegram_chat_id' : data_conf[last_index + 7].decode('utf-8') }
+			data_aux_json = { 'repository_name' : str(data_conf[last_index + 4]), 'telegram_bot_token' : data_conf[last_index + 5].decode('utf-8'), 'telegram_chat_id' : data_conf[last_index + 6].decode('utf-8') }
 			d.update(http_auth_json)
 		else:
-			data_aux_json = { 'use_http_auth' : False, 'repository_name' : str(data_conf[last_index + 2]), 'writeback_index' : str(data_conf[last_index + 3]), 'telegram_bot_token' : data_conf[last_index + 4].decode('utf-8'), 'telegram_chat_id' : data_conf[last_index + 5].decode('utf-8') }
+			data_aux_json = { 'use_http_auth' : False, 'repository_name' : str(data_conf[last_index + 2]), 'telegram_bot_token' : data_conf[last_index + 3].decode('utf-8'), 'telegram_chat_id' : data_conf[last_index + 4].decode('utf-8') }
 		d.update(data_aux_json)
 		try:
 			with open(self.utils.getPathSTool('conf') + '/es_conf.yaml', 'w') as yaml_file:

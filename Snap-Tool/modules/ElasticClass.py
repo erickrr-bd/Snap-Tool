@@ -1,6 +1,7 @@
 import sys
 import requests
 from modules.UtilsClass import Utils
+from ssl import create_default_context
 from modules.LoggerClass import Logger
 from elasticsearch import Elasticsearch, RequestsHttpConnection, exceptions	
 
@@ -63,7 +64,16 @@ class Elastic:
 											connection_class = RequestsHttpConnection,
 											use_ssl = True,
 											verify_certs = False,
-											ssl_show_warn=False)
+											ssl_show_warn = False)
+				else:
+					context = create_default_context(cafile = snap_tool_conf['path_cert'])
+					conn_es = Elasticsearch([snap_tool_conf['es_host']], 
+											port = snap_tool_conf['es_port'],
+											connection_class = RequestsHttpConnection,
+											http_auth = (self.utils.decryptAES(snap_tool_conf['http_auth_user']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['http_auth_pass']).decode('utf-8')),
+											use_ssl = True,
+											verify_certs = True,
+											ssl_context = context)
 			if snap_tool_conf['use_ssl'] == True and snap_tool_conf['use_http_auth'] == True:
 				if not snap_tool_conf['valid_certificates'] == True:
 					conn_es = Elasticsearch([snap_tool_conf['es_host']], 
@@ -72,7 +82,16 @@ class Elastic:
 											http_auth = (self.utils.decryptAES(snap_tool_conf['http_auth_user']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['http_auth_pass']).decode('utf-8')),
 											use_ssl = True,
 											verify_certs = False,
-											ssl_show_warn=False)
+											ssl_show_warn = False)
+				else:
+					context = create_default_context(cafile = snap_tool_conf['path_cert'])
+					conn_es = Elasticsearch([snap_tool_conf['es_host']], 
+											port = snap_tool_conf['es_port'],
+											connection_class = RequestsHttpConnection,
+											http_auth = (self.utils.decryptAES(snap_tool_conf['http_auth_user']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['http_auth_pass']).decode('utf-8')),
+											use_ssl = True,
+											verify_certs = True,
+											ssl_context = context)
 			if conn_es.ping():
 				self.logger.createLogTool("Connection established to: " + snap_tool_conf['es_host'] + ':' + str(snap_tool_conf['es_port']), 2)
 				return conn_es
