@@ -12,14 +12,24 @@ Class that allows you to manage the sending of alerts through Telegram.
 class Telegram:
 
 	"""
-	Utils type object.
+	Property that stores an object of type Utils.
 	"""
-	utils = Utils()
+	utils = None
 
 	"""
-	Logger type object.
+	Property that stores an object of type Logger.
 	"""
-	logger = Logger()
+	logger = None
+
+	"""
+	Constructor for the Telegram class.
+
+	Parameters:
+	self -- An instantiated object of the Telegram class.
+	"""
+	def __init__(self):
+		self.utils = Utils()
+		self.logger = Logger()
 
 	"""
 	Method that sends the alert to the telegram channel.
@@ -68,6 +78,8 @@ class Telegram:
 			message += u'\u2611\uFE0F' + " Action: Snaphot removed\n"
 		if action == "mount_snapshot":
 			message += u'\u2611\uFE0F' + " Action: Snapshot mounted as searchable snapshot\n"
+		if action == "delete_index":
+			message += u'\u2611\uFE0F' + " Action: Index removed\n"
 		message += u'\u2611\uFE0F' + " Snapshot name: " + snapshot_name +"\n"
 		message += u'\u2611\uFE0F' + " Index name: " + snapshot_name + "\n"
 		return message
@@ -79,15 +91,13 @@ class Telegram:
 	self -- An instantiated object of the Telegram class.
 	start_time -- Snapshot creation start time.
 	end_time -- Snapshot creation end time.
-	delete_index -- Whether the index was removed or not.
 
 	Return: 
 	message -- Character string with the formed message.
 	"""
-	def getMessageEndSnapshot(self, start_time, end_time, delete_index):
+	def getMessageEndSnapshot(self, start_time, end_time):
 		message = u'\u2611\uFE0F' + " Start time: " + str(start_time) + "\n"
-		message += u'\u2611\uFE0F' + " End time: " + str(end_time) + "\n"
-		message += u'\u2611\uFE0F' + " Delete index: " + str(delete_index)
+		message += u'\u2611\uFE0F' + " End time: " + str(end_time)
 		return message
 	
 	"""
@@ -101,8 +111,8 @@ class Telegram:
 		if telegram_code == 200:
 			self.logger.createLogTool("Telegram message sent successfully", 2)
 		if telegram_code == 400:
-			self.logger.createLogTool("Telegram message not sent. Bad request", 4)
+			self.logger.createLogTool("Telegram message not sent. Bad request.", 4)
 		if telegram_code == 401:
-			self.logger.createLogTool("Telegram message not sent. Unauthorized", 4)
+			self.logger.createLogTool("Telegram message not sent. Unauthorized.", 4)
 		if telegram_code == 404:
-			self.logger.createLogTool("Telegram message not sent. Not found", 4)
+			self.logger.createLogTool("Telegram message not sent. Not found.", 4)

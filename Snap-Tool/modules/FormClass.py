@@ -13,47 +13,34 @@ Class that allows you to manage everything related to forms and data entry.
 """
 class FormDialogs:
 	"""
-	Object of type Dialog.
+	Property that stores an object of type Dialog.
 	"""
-	d = Dialog(dialog = "dialog")
+	d = None
 
 	"""
-	The title that will appear in the background of Telk-Alert-Tool is assigned.
+	Property that stores an object of type Utils.
 	"""
-	d.set_background_title("SNAP-TOOL")
+	utils = None
 
 	"""
-	Property that contains the options for the graphical interface buttons.
+	Property that stores an object of type Configuration.
 	"""
-	button_names = {d.OK:	  "OK",
-					d.CANCEL: "Cancel",
-					d.HELP:	  "Help",
-					d.EXTRA:  "Extra"}
+	configuration = None
 
 	"""
-	Utils type object.
+	Property that stores an object of type Elastic.
 	"""
-	utils = Utils()
+	elastic = None
 
 	"""
-	Configuration type object.
+	Property that stores an object of type Telegram.
 	"""
-	configuration = Configuration()
+	telegram = None
 
 	"""
-	Elastic type object.
+	Property that stores an object of type Logger.
 	"""
-	elastic = Elastic()
-
-	"""
-	Telegram type object.
-	"""
-	telegram = Telegram()
-
-	"""
-	Logger type object.
-	"""
-	logger = Logger()
+	logger = None
 
 	"""
 	Property that contains the options when the configuration file is not created.
@@ -64,6 +51,21 @@ class FormDialogs:
 	Property that contains the options when the configuration file is created.
 	"""
 	options_conf_true = [("Modify configuration", "Modify the configuration file", 0)]
+
+	"""
+	Constructor for the FormDialogs class.
+
+	Parameters:
+	self -- An instantiated object of the FormDialogs class.
+	"""
+	def __init__(self):
+		self.d = Dialog(dialog = "dialog")
+		self.d.set_background_title("SNAP-TOOL")
+		self.utils = Utils()
+		self.elastic = Elastic()
+		self.configuration = Configuration()
+		self.telegram = Telegram()
+		self.logger = Logger()
 
 	"""
 	Method that generates the menu interface.
@@ -240,8 +242,8 @@ class FormDialogs:
 					self.d.msgbox("Invalid port", 5 , 50, title = "Error message")
 				else:
 					return tag_port
-		if code_port == self.d.CANCEL:
-			self.mainMenu()
+			if code_port == self.d.CANCEL:
+				self.mainMenu()
 
 	"""
 	Method that generates the interface for entering questioning type data with two possible yes or no values.
@@ -328,41 +330,43 @@ class FormDialogs:
 	KeyError -- A Python KeyError exception is what is raised when you try to access a key that isn’t in a dictionary (dict).
 	"""
 	def getCreateSnapshot(self):
-		is_delete_index = ""
-		snap_tool_conf = self.utils.readFileYaml(self.utils.getPathSTool('conf') + '/es_conf.yaml')
-		conn_es = self.elastic.getConnectionElastic(snap_tool_conf, FormDialogs())
-		list_indices = self.elastic.getIndices(conn_es)
-		try:
-			if len(list_indices) == 0:
-				self.d.msgbox("\nThere are no indexes", 7, 50, title = "Notification message")
-			else:
-				option_index = self.getDataRadioList("Select a option:", list_indices, "ElasticSearch Indexes")
-				message_create = self.telegram.getTelegramMessage("create_snapshot", option_index)
-				status_code_create = self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_create)
-				self.telegram.getStatusByTelegramCode(status_code_create)
-				self.logger.createLogTool("Snapshot creation started: " + option_index, 2)
-				self.elastic.createSnapshot(conn_es, snap_tool_conf['repository_name'], option_index, FormDialogs())
-				status_snapshot = self.elastic.getStatusSnapshot(conn_es, snap_tool_conf['repository_name'], option_index, FormDialogs())
-				if status_snapshot == 'SUCCESS':
-					self.d.msgbox("\nSnapshot created. Index:\n- " + option_index, 7, 50, title = "Notification message")
-					delete_index = self.getDataYesOrNo("\nDo you want to delete the index that was backed up in the snapshot?\n\n- " + option_index, "Delete Index")
-					if delete_index == "ok":
-						is_delete_index = "yes"
-						self.elastic.deleteIndex(conn_es, option_index)
-						self.d.msgbox("\nThe index has been removed", 7, 50, title = "Notification message")
-					else:
-						is_delete_index = "no"
-					status_snapshot_end = self.elastic.getStatus(conn_es, snap_tool_conf['repository_name'], option_index, FormDialogs())
-					message = self.telegram.getTelegramMessage("end_snapshot", option_index)
-					message += self.telegram.getMessageEndSnapshot(status_snapshot_end['snapshots'][0]['start_time'], status_snapshot_end['snapshots'][0]['end_time'], is_delete_index)
-					status_code = self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message)
-					self.telegram.getStatusByTelegramCode(status_code)
-					self.logger.createLogTool("Snapshot creation completed: " + option_index, 2)
-			self.mainMenu()
-		except KeyError as exception:
-			self.d.msgbox("\nKey Error: " + str(exception), 7, 50, title = "Error message")
-			self.logger.createLogTool("Key Error: " + str(exception), 4)
-			sys.exit(1)
+		if not os.path.exists(self.utils.getPathSTool("conf") + "/es_conf.yaml"):
+			self.d.msgbox("\nConfiguration file not found", 7, 50, title = "Error message")
+		else:
+			snap_tool_conf = self.utils.readFileYaml(self.utils.getPathSTool('conf') + '/es_conf.yaml')
+			conn_es = self.elastic.getConnectionElastic(snap_tool_conf, FormDialogs())
+			list_indices = self.elastic.getIndices(conn_es)
+			try:
+				if len(list_indices) == 0:
+					self.d.msgbox("\nThere are no indexes", 7, 50, title = "Notification message")
+				else:
+					option_index = self.getDataRadioList("Select a option:", list_indices, "ElasticSearch Indexes")
+					message_create = self.telegram.getTelegramMessage("create_snapshot", option_index)
+					status_code_create = self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_create)
+					self.telegram.getStatusByTelegramCode(status_code_create)
+					self.logger.createLogTool("Snapshot creation started: " + option_index, 2)
+					self.elastic.createSnapshot(conn_es, snap_tool_conf['repository_name'], option_index, FormDialogs())
+					status_snapshot = self.elastic.getStatusSnapshot(conn_es, snap_tool_conf['repository_name'], option_index, FormDialogs())
+					if status_snapshot == 'SUCCESS':
+						status_snapshot_end = self.elastic.getStatus(conn_es, snap_tool_conf['repository_name'], option_index, FormDialogs())
+						message = self.telegram.getTelegramMessage("end_snapshot", option_index)
+						message += self.telegram.getMessageEndSnapshot(status_snapshot_end['snapshots'][0]['start_time'], status_snapshot_end['snapshots'][0]['end_time'])
+						status_code = self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message)
+						self.telegram.getStatusByTelegramCode(status_code)
+						self.logger.createLogTool("Snapshot creation completed: " + option_index, 2)
+						self.d.msgbox("\nSnapshot created. Index:\n- " + option_index, 7, 50, title = "Notification message")
+						delete_index = self.getDataYesOrNo("\nDo you want to delete the index that was backed up in the snapshot?\n\n- " + option_index, "Delete Index")
+						if delete_index == "ok":
+							self.elastic.deleteIndex(conn_es, option_index)
+							message_rindex = self.telegram.getTelegramMessage("delete_index", option_index)
+							status_code_rindex = self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_rindex)
+							self.telegram.getStatusByTelegramCode(status_code_rindex)
+							self.d.msgbox("\nThe index has been removed", 7, 50, title = "Notification message")
+				self.mainMenu()
+			except KeyError as exception:
+				self.logger.createLogTool("Key Error: " + str(exception), 4)
+				self.d.msgbox("\nKey Error: " + str(exception), 7, 50, title = "Error message")		
+				sys.exit(1)
 
 	"""
 	Method that lists all the snapshots created and allows one or more to be selected for deletion.
@@ -374,28 +378,31 @@ class FormDialogs:
 	KeyError -- A Python KeyError exception is what is raised when you try to access a key that isn’t in a dictionary (dict). 
 	"""
 	def getDeleteSnapshot(self):
-		snap_tool_conf = self.utils.readFileYaml(self.utils.getPathSTool('conf') + '/es_conf.yaml')
-		conn_es = self.elastic.getConnectionElastic(snap_tool_conf, FormDialogs())
-		try:
-			list_snapshots = self.elastic.getSnapshots(conn_es, snap_tool_conf['repository_name'], FormDialogs())
-			if len(list_snapshots) == 0:
-				self.d.msgbox("\nThere are no snapshots to delete", 7, 50, title = "Notification message")
-			else:
-				option_snapshot = self.getDataCheckList("Select a option:", list_snapshots, "ElasticSearch Snapshots")
-				delete_snapshot = self.getDataYesOrNo("\nAre you sure to delete the selected snapshot (s)?\n\n- " + ", ".join(option_snapshot), "Delete Snapshot")
-				if delete_snapshot == "ok":
-					for snapshot in option_snapshot:
-						self.elastic.deleteSnapshot(conn_es, snap_tool_conf['repository_name'], snapshot, FormDialogs())
-						message = self.telegram.getTelegramMessage("delete_snapshot", snapshot)
-						status_code = self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message)
-						self.telegram.getStatusByTelegramCode(status_code)
-						self.logger.createLogTool("Snaphot removed: " + snapshot, 2)
-					self.d.msgbox("\nThe snapshot (s) have been deleted", 7, 50, title = "Notification message")
-			self.mainMenu()
-		except KeyError as exception:
-			self.d.msgbox("\nKey Error: " + str(exception), 7, 50, title = "Error message")
-			self.logger.createLogTool("Key Error: " + str(exception), 4)
-			sys.exit(1)
+		if not os.path.exists(self.utils.getPathSTool("conf") + "/es_conf.yaml"):
+			self.d.msgbox("\nConfiguration file not found", 7, 50, title = "Error message")
+		else:
+			snap_tool_conf = self.utils.readFileYaml(self.utils.getPathSTool('conf') + '/es_conf.yaml')
+			conn_es = self.elastic.getConnectionElastic(snap_tool_conf, FormDialogs())
+			try:
+				list_snapshots = self.elastic.getSnapshots(conn_es, snap_tool_conf['repository_name'], FormDialogs())
+				if len(list_snapshots) == 0:
+					self.d.msgbox("\nThere are no snapshots to delete", 7, 50, title = "Notification message")
+				else:
+					option_snapshot = self.getDataCheckList("Select a option:", list_snapshots, "ElasticSearch Snapshots")
+					delete_snapshot = self.getDataYesOrNo("\nAre you sure to delete the selected snapshot (s)?\n\n- " + ", ".join(option_snapshot), "Delete Snapshot")
+					if delete_snapshot == "ok":
+						for snapshot in option_snapshot:
+							self.elastic.deleteSnapshot(conn_es, snap_tool_conf['repository_name'], snapshot, FormDialogs())
+							message = self.telegram.getTelegramMessage("delete_snapshot", snapshot)
+							status_code = self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message)
+							self.telegram.getStatusByTelegramCode(status_code)
+							self.logger.createLogTool("Snaphot removed: " + snapshot, 2)
+						self.d.msgbox("\nThe snapshot(s) have been deleted:\n- " + ", ".join(option_snapshot), 7, 50, title = "Notification message")
+				self.mainMenu()
+			except KeyError as exception:
+				self.logger.createLogTool("Key Error: " + str(exception), 4)
+				self.d.msgbox("\nKey Error: " + str(exception), 7, 50, title = "Error message")
+				sys.exit(1)
 
 	"""
 	Method that obtains the list of created snapshots allows selecting one and mounting it as a searchable snapshot.
@@ -407,27 +414,30 @@ class FormDialogs:
 	KeyError -- A Python KeyError exception is what is raised when you try to access a key that isn’t in a dictionary (dict). 
 	"""
 	def getCreateSearchSnapshot(self):
-		snap_tool_conf = self.utils.readFileYaml(self.utils.getPathSTool('conf') + '/es_conf.yaml')
-		conn_es = self.elastic.getConnectionElastic(snap_tool_conf, FormDialogs())
-		if float(snap_tool_conf['es_version']) < 7.0:
-			self.d.msgbox("\nElasticSearch version not supported", 7, 50, title = "Error message")
+		if not os.path.exists(self.utils.getPathSTool("conf") + "/es_conf.yaml"):
+			self.d.msgbox("\nConfiguration file not found", 7, 50, title = "Error message")
 		else:
-			try:
-				list_snapshots = self.elastic.getSnapshots(conn_es, snap_tool_conf['repository_name'], FormDialogs())
-				if len(list_snapshots) == 0:
-					self.d.msgbox("\nThere are no snapshots to delete", 7, 50, title = "Notification message")
-				else:
-					option_snapshot = self.getDataRadioList("Select a option:", list_snapshots, "ElasticSearch Snapshots")
-					self.elastic.mountSearchableSnapshots(conn_es, snap_tool_conf['repository_name'], option_snapshot, FormDialogs())
-					self.d.msgbox("\nSnapshot mounted as a searchable snapshot: " + option_snapshot, 7, 50, title = "Notification message")
-					message = self.telegram.getTelegramMessage("mount_snapshot", option_snapshot)
-					status_code = self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message)
-					self.telegram.getStatusByTelegramCode(status_code)
-					self.logger.createLogTool("Snapshot mounted as searchable snapshot: " + option_snapshot, 2)
-			except KeyError as exception:
-				self.d.msgbox("\nKey Error: " + str(exception), 7, 50, title = "Error message")
-				self.logger.createLogTool("Key Error: " + str(exception), 4)
-				sys.exit(1)
+			snap_tool_conf = self.utils.readFileYaml(self.utils.getPathSTool('conf') + '/es_conf.yaml')
+			conn_es = self.elastic.getConnectionElastic(snap_tool_conf, FormDialogs())
+			if float(snap_tool_conf['es_version']) < 7.0:
+				self.d.msgbox("\nElasticSearch version not supported", 7, 50, title = "Error message")
+			else:
+				try:
+					list_snapshots = self.elastic.getSnapshots(conn_es, snap_tool_conf['repository_name'], FormDialogs())
+					if len(list_snapshots) == 0:
+						self.d.msgbox("\nThere are no snapshots to delete", 7, 50, title = "Notification message")
+					else:
+						option_snapshot = self.getDataRadioList("Select a option:", list_snapshots, "ElasticSearch Snapshots")
+						self.elastic.mountSearchableSnapshots(conn_es, snap_tool_conf['repository_name'], option_snapshot, FormDialogs())
+						message = self.telegram.getTelegramMessage("mount_snapshot", option_snapshot)
+						status_code = self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message)
+						self.telegram.getStatusByTelegramCode(status_code)
+						self.logger.createLogTool("Snapshot mounted as searchable snapshot: " + option_snapshot, 2)
+						self.d.msgbox("\nSnapshot mounted as a searchable snapshot: " + option_snapshot, 7, 50, title = "Notification message")
+				except KeyError as exception:
+					self.logger.createLogTool("Key Error: " + str(exception), 4)
+					self.d.msgbox("\nKey Error: " + str(exception), 7, 50, title = "Error message")
+					sys.exit(1)
 
 	"""
 	Method that displays a message on the screen with information about the application.

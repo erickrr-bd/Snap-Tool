@@ -17,14 +17,24 @@ class Elastic:
 		warnings.simplefilter("ignore")
 	
 	"""
-	Utils type object.
+	Property that stores an object of type Utils.
 	"""
-	utils = Utils()
+	utils = None
 
 	"""
-	Logger type object.
+	Property that stores an object of type Logger.
 	"""
-	logger = Logger()
+	logger = None
+
+	"""
+	Constructor for the Elastic class.
+
+	Parameters:
+	self -- An instantiated object of the Elastic class.
+	"""
+	def __init__(self):
+		self.utils = Utils()
+		self.logger = Logger()
 
 	"""
 	Method that establishes the connection of Telk-Alert with ElasticSearch.
@@ -96,23 +106,23 @@ class Elastic:
 				self.logger.createLogTool("Connection established to: " + snap_tool_conf['es_host'] + ':' + str(snap_tool_conf['es_port']), 2)
 				return conn_es
 		except KeyError as exception:
-			form_dialog.d.msgbox("\nKey Error: " + str(exception), 7, 50, title = "Error message")
 			self.logger.createLogTool("Key Error: " + str(exception), 4)
+			form_dialog.d.msgbox("\nKey Error: " + str(exception), 7, 50, title = "Error message")
 			sys.exit(1)
 		except exceptions.ConnectionError as exception:
-			form_dialog.d.msgbox("\nFailed connection to: " + snap_tool_conf['es_host'] + ':' + str(snap_tool_conf['es_port']) + '. For more information see the application logs.', 7, 50, title = "Error message")
 			self.logger.createLogTool(str(exception), 4)
+			form_dialog.d.msgbox("\nFailed connection to: " + snap_tool_conf['es_host'] + ':' + str(snap_tool_conf['es_port']) + '. For more information, see the logs.', 7, 50, title = "Error message")
 			sys.exit(1)
 		except exceptions.AuthenticationException as exception:
-			form_dialog.d.msgbox("\nHTTP authentication failed. For more information see the application logs.", 7, 50, title = "Error message")
 			self.logger.createLogTool(str(exception), 4)
+			form_dialog.d.msgbox("\nAuthentication failed. For more information, see the logs.", 7, 50, title = "Error message")
 			sys.exit(1)
 		except exceptions.AuthorizationException as exception:
-			form_dialog.d.msgbox("\nUnauthorized access. For more information see the application logs.", 7, 50, title = "Error message")
 			self.logger.createLogTool(str(exception), 4)
+			form_dialog.d.msgbox("\nUnauthorized access. For more information, see the logs.", 7, 50, title = "Error message")
 			sys.exit(1)
 		except requests.exceptions.InvalidURL as exception:
-			form_dialog.d.msgbox("\n" + str(exception), 7, 50, title = "Error message")
+			form_dialog.d.msgbox("\nInvalid URL. For more information, see the logs.", 7, 50, title = "Error message")
 			self.logger.createLogTool(str(exception), 4)
 			sys.exit(1)
 
@@ -134,12 +144,13 @@ class Elastic:
 		try:
 			conn_es.snapshot.create(repository = repository_name, snapshot = index_name, body = { "indices": index_name }, wait_for_completion = True, request_timeout = 7200)
 		except exceptions.RequestError as exception:
-			form_dialog.d.msgbox("\nThe snapshot already exists", 7, 50, title = "Error message")
 			self.logger.createLogTool(str(exception), 4)
+			form_dialog.d.msgbox("\nFailed to create snapshot. For more information, see the logs.", 7, 50, title = "Error message")
 			form_dialog.mainMenu()
 		except exceptions.NotFoundError as exception:
-			form_dialog.d.msgbox("\nRepository not found", 7, 50, title = "Error message")
 			self.logger.createLogTool(str(exception), 4)
+			form_dialog.d.msgbox("\nFailed to create snapshot. For more information, see the logs.", 7, 50, title = "Error message")
+			form_dialog.mainMenu()
 
 	"""
 	Method that obtains the status of a snapshot.
@@ -163,8 +174,9 @@ class Elastic:
 			status_snapshot = status_aux['snapshots'][0]['state']
 			return status_snapshot
 		except exceptions.NotFoundError as exception:
-			form_dialog.d.msgbox("\nRepository not found", 7, 50, title = "Error message")
 			self.logger.createLogTool(str(exception), 4)
+			form_dialog.d.msgbox("\nFailed to get snapshot status. For more information, see the logs.", 7, 50, title = "Error message")
+			form_dialog.mainMenu()
 
 	"""
 	Method that obtains the final status of a snapshot.
@@ -187,8 +199,9 @@ class Elastic:
 			status_aux = conn_es.snapshot.get(repository = repository_name, snapshot = snapshot_name)
 			return status_aux
 		except exceptions.NotFoundError as exception:
-			form_dialog.d.msgbox("\nRepository not found", 7, 50, title = "Error message")
 			self.logger.createLogTool(str(exception), 4)
+			form_dialog.d.msgbox("\nFailed to get snapshot status. For more information, see the logs.", 7, 50, title = "Error message")
+			form_dialog.mainMenu()
 
 	"""
 	Method that gets the list of all snapshots created in the repository.
@@ -217,8 +230,9 @@ class Elastic:
 				list_snapshots.append((snapshot, "Snapshot Name", 0))
 			return list_snapshots
 		except exceptions.NotFoundError as exception:
-			form_dialog.d.msgbox("\nRepository not found", 7, 50, title = "Error message")
 			self.logger.createLogTool(str(exception), 4)
+			form_dialog.d.msgbox("\nFailed to get snapshot list. For more information, see the logs.", 7, 50, title = "Error message")
+			form_dialog.mainMenu()
 
 	"""
 	Method that removes a snapshot in ElasticSearch.
@@ -237,8 +251,10 @@ class Elastic:
 		try:
 			conn_es.snapshot.delete(repository = repository_name, snapshot = snapshot_name, request_timeout = 7200)
 		except exceptions.NotFoundError as exception:
-			form_dialog.d.msgbox("\nRepository not found", 7, 50, title = "Error message")
 			self.logger.createLogTool(str(exception), 4)
+			form_dialog.d.msgbox("\nFailed to delete snapshot(s). For more information, see the logs.", 7, 50, title = "Error message")
+			form_dialog.mainMenu()
+			
 
 	"""
 	Method that mounts a snapshot created as a searchable snapshot.
@@ -258,11 +274,13 @@ class Elastic:
 		try:
 			conn_es.searchable_snapshots.mount(repository = repository_name, snapshot = snapshot_name, body = { "index" : snapshot_name }, wait_for_completion = True, request_timeout = 7200)
 		except exceptions.NotFoundError as exception:
-			form_dialog.d.msgbox("\nRepository not found", 7, 50, title = "Error message")
 			self.logger.createLogTool(str(exception), 4)
+			form_dialog.d.msgbox("\nFailed to mount snapshot as a searchable snapshot. For more information, see the logs.", 7, 50, title = "Error message")
+			form_dialog.mainMenu()
 		except exceptions.AuthorizationException as exception:
-			form_dialog.d.msgbox("\nFeature not supported for this type of license. 'Enterprise' license required", 7, 50, title = "Error message")
 			self.logger.createLogTool(str(exception), 4)
+			form_dialog.d.msgbox("\nFailed to mount snapshot as a searchable snapshot. For more information, see the logs.", 7, 50, title = "Error message")
+			form_dialog.mainMenu()
 
 	"""
 	Method that obtains the list of existing indices in ElasticSearch.

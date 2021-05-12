@@ -8,14 +8,24 @@ Class that manages everything related to the Snap-Tool configuration file.
 """
 class Configuration:
 	"""
-	Utils type object.
+	Property that stores an object of type Utils.
 	"""
-	utils = Utils()
+	utils = None
 
 	"""
-	Logger type object.
+	Property that stores an object of type Logger.
 	"""
-	logger = Logger()
+	logger = None
+
+	"""
+	Constructor for the Configuration class.
+
+	Parameters:
+	self -- An instantiated object of the Configuration class.
+	"""
+	def __init__(self):
+		self.utils = Utils()
+		self.logger = Logger()
 
 	"""
 	Method that requests the data for the creation of the Telk-Alert configuration file.
@@ -64,7 +74,7 @@ class Configuration:
 			form_dialog.d.msgbox("\nConfiguration file created", 7, 50, title = "Notification message")
 			self.logger.createLogTool("Configuration file created", 2)
 		else:
-			form_dialog.d.msgbox("\nError creating configuration file", 7, 50, title = "Error message")
+			form_dialog.d.msgbox("\nError creating configuration file. For more information, see the logs.", 7, 50, title = "Error message")
 		form_dialog.mainMenu()
 	
 	"""
@@ -92,7 +102,8 @@ class Configuration:
 
 		options_ssl_false = [("Enable", "Enable SSL/TLS communication", 0)]
 
-		options_valid_cert_true = [("To disable", "Disable certificate validation", 0)]
+		options_valid_cert_true = [("To disable", "Disable certificate validation", 0),
+									("Modify", "Change certificate file", 0)]
 
 		options_valid_cert_false = [("Enable", "Enable certificate validation", 0)]
 
@@ -112,9 +123,6 @@ class Configuration:
 		flag_repository_name = 0
 		flag_bot_token = 0
 		flag_chat_id = 0
-		with open(self.utils.getPathSTool('conf') + '/es_conf.yaml', "rU") as f:
-			data_conf = yaml.safe_load(f)
-		hash_origen = self.utils.getSha256File(self.utils.getPathSTool('conf') + '/es_conf.yaml')
 		opt_conf_prop = form_dialog.getDataCheckList("Select one or more options", options_conf_prop, "Update configuration file")
 		for opt_prop in opt_conf_prop:
 			if opt_prop == "Version":
@@ -136,6 +144,9 @@ class Configuration:
 			if opt_prop == "Chat ID":
 				flag_chat_id = 1
 		try:
+			with open(self.utils.getPathSTool('conf') + '/es_conf.yaml', "rU") as f:
+				data_conf = yaml.safe_load(f)
+			hash_origen = self.utils.getSha256File(self.utils.getPathSTool('conf') + '/es_conf.yaml')
 			if flag_version == 1:
 				version_es = form_dialog.getDataNumberDecimal("Enter the ElasticSearch version:", str(data_conf['es_version']))
 				data_conf['es_version'] = str(version_es)
@@ -150,14 +161,19 @@ class Configuration:
 					opt_ssl_true = form_dialog.getDataRadioList("Select a option:", options_ssl_true, "Connection via SSL/TLS")
 					if opt_ssl_true == "To disable":
 						del data_conf['valid_certificates']
-						del data_conf['path_cert']
+						if 'path_cert' in data_conf:
+							del data_conf['path_cert']
 						data_conf['use_ssl'] = False
 					if opt_ssl_true == "Modify":
 						if data_conf['valid_certificates'] == True:
 							opt_valid_cert_true = form_dialog.getDataRadioList("Select a option:", options_valid_cert_true, "Certificate Validation")
 							if opt_valid_cert_true == "To disable":
-								del data_conf['path_cert']
+								if 'path_cert' in data_conf:
+									del data_conf['path_cert']
 								data_conf['valid_certificates'] = False
+							if opt_valid_cert_true == "Modify":
+								cert_file = form_dialog.getFileOrDirectory(data_conf['path_cert'], "Select the CA certificate:")
+								data_conf['path_cert'] = str(cert_file)
 						else:
 							opt_valid_cert_false = form_dialog.getDataRadioList("Select a option:", options_valid_cert_false, "Certificate Validation")
 							if opt_valid_cert_false == "Enable":
@@ -171,7 +187,8 @@ class Configuration:
 						data_conf['use_ssl'] = True
 						valid_certificates = form_dialog.getDataYesOrNo("\nDo you want the certificates for SSL/TLS communication to be validated?", "Certificate Validation")
 						if valid_certificates == "ok":
-							valid_certificates_json = { 'valid_certificates' : True }
+							cert_file = form_dialog.getFileOrDirectory('/etc/Snap-Tool', "Select the CA certificate:")
+							valid_certificates_json = { 'valid_certificates' : True, 'path_cert' : str(cert_file)}
 						else:
 							valid_certificates_json = { 'valid_certificates' : False }
 						data_conf.update(valid_certificates_json)
@@ -220,13 +237,17 @@ class Configuration:
 			if hash_origen == hash_modify:
 				form_dialog.d.msgbox("\nConfiguration file not modified", 7, 50, title = "Notification message")
 			else:
-				form_dialog.d.msgbox("\nModified configuration file", 7, 50, title = "Notification message")
 				self.logger.createLogTool("Modified configuration file", 2)
+				form_dialog.d.msgbox("\nModified configuration file", 7, 50, title = "Notification message")
 			form_dialog.mainMenu()	
 		except KeyError as exception:
 			self.logger.createLogTool("Key Error: " + str(exception), 4)
 			form_dialog.d.msgbox("\nKey Error: " + str(exception), 7, 50, title = "Error message")
-			form_dialog.mainMenu()	
+			form_dialog.mainMenu()
+		except OSError as exception:
+			self.logger.createLogTool(str(exception), 4)
+			form_dialog.d.msgbox("\nError modifying the configuration file. For more information, see the logs.", 7, 50, title = "Error message")
+			form_dialog.mainMenu()
 
 	"""
 	Method that creates the YAML file with the data entered for the Telk-Alert configuration file.
@@ -265,4 +286,4 @@ class Configuration:
 			with open(self.utils.getPathSTool('conf') + '/es_conf.yaml', 'w') as yaml_file:
 				yaml.dump(d, yaml_file, default_flow_style = False)
 		except OSError as exception:
-			self.logger.createLogTool("Error" + str(exception), 4)
+			self.logger.createLogTool(str(exception), 4)

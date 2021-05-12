@@ -1,5 +1,4 @@
 import os
-import pwd
 import logging
 from datetime import date
 
@@ -19,7 +18,7 @@ class Logger:
 	def createLogTool(self, message, type_log):
 		logger = logging.getLogger('Snap_Tool_Log')
 		logger.setLevel(logging.INFO)
-		fh = logging.FileHandler('/var/log/Snap-Tool/snap_tool_log' + str(date.today()) + '.log')
+		fh = logging.FileHandler('/var/log/Snap-Tool/snap-tool-log-' + str(date.today()) + '.log')
 		logger.addHandler(fh)
 		formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 		fh.setFormatter(formatter)

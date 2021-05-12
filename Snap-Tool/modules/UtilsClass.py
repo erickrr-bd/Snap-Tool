@@ -12,12 +12,12 @@ class Utils:
 	"""
 	Property that saves the passphrase that will be used for the decryption process.
 	"""
-	passphrase = ""
+	passphrase = None
 
 	"""
-	Logger type object.
+	Property that stores an object of type Logger.
 	"""
-	logger = Logger()
+	logger = None
 
 	"""
 	Constructor for the Utils class.
@@ -27,6 +27,7 @@ class Utils:
 	"""
 	def __init__(self):
 		self.passphrase = self.getPassphrase()
+		self.logger = Logger()
 
 	"""
 	Method that obtains the content of a file with the extension yaml.
