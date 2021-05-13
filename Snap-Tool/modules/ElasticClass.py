@@ -65,7 +65,7 @@ class Elastic:
 				conn_es = Elasticsearch([snap_tool_conf['es_host']], 
 										port = snap_tool_conf['es_port'],
 										connection_class = RequestsHttpConnection,
-										http_auth = (self.utils.decryptAES(snap_tool_conf['http_auth_user']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['http_auth_pass']).decode('utf-8')),
+										http_auth = (self.utils.decryptAES(snap_tool_conf['http_auth_user'], form_dialog).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['http_auth_pass'], form_dialog).decode('utf-8')),
 										use_ssl = False)
 			if snap_tool_conf['use_ssl'] == True and (not snap_tool_conf['use_http_auth'] == True):
 				if not snap_tool_conf['valid_certificates'] == True:
@@ -80,7 +80,7 @@ class Elastic:
 					conn_es = Elasticsearch([snap_tool_conf['es_host']], 
 											port = snap_tool_conf['es_port'],
 											connection_class = RequestsHttpConnection,
-											http_auth = (self.utils.decryptAES(snap_tool_conf['http_auth_user']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['http_auth_pass']).decode('utf-8')),
+											http_auth = (self.utils.decryptAES(snap_tool_conf['http_auth_user'], form_dialog).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['http_auth_pass'], form_dialog).decode('utf-8')),
 											use_ssl = True,
 											verify_certs = True,
 											ssl_context = context)
@@ -89,7 +89,7 @@ class Elastic:
 					conn_es = Elasticsearch([snap_tool_conf['es_host']], 
 											port = snap_tool_conf['es_port'],
 											connection_class = RequestsHttpConnection,
-											http_auth = (self.utils.decryptAES(snap_tool_conf['http_auth_user']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['http_auth_pass']).decode('utf-8')),
+											http_auth = (self.utils.decryptAES(snap_tool_conf['http_auth_user'], form_dialog).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['http_auth_pass'], form_dialog).decode('utf-8')),
 											use_ssl = True,
 											verify_certs = False,
 											ssl_show_warn = False)
@@ -98,7 +98,7 @@ class Elastic:
 					conn_es = Elasticsearch([snap_tool_conf['es_host']], 
 											port = snap_tool_conf['es_port'],
 											connection_class = RequestsHttpConnection,
-											http_auth = (self.utils.decryptAES(snap_tool_conf['http_auth_user']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['http_auth_pass']).decode('utf-8')),
+											http_auth = (self.utils.decryptAES(snap_tool_conf['http_auth_user'], form_dialog).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['http_auth_pass'], form_dialog).decode('utf-8')),
 											use_ssl = True,
 											verify_certs = True,
 											ssl_context = context)

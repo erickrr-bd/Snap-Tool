@@ -35,6 +35,7 @@ class Utils:
 	Parameters:
 	self -- An instantiated object of the Utils class.
 	file_yaml -- Yaml file path.
+	form_dialog -- A FormDialogs class object.
 
 	Return:
 	data_yaml -- Contents of the .yaml file stored in a list.
@@ -42,14 +43,15 @@ class Utils:
 	Exceptions:
 	IOError -- It is an error raised when an input/output operation fails.
 	"""
-	def readFileYaml(self, file_yaml):
+	def readFileYaml(self, file_yaml, form_dialog):
 		try:
 			with open(file_yaml, 'r') as file:
 				data_yaml = yaml.safe_load(file)
 			return data_yaml
 		except IOError as exception:
-			self.logger.createLogTool("Error" + str(exception), 4)
-			sys.exit(1)
+			self.logger.createLogTool(str(exception), 4)
+			form_dialog.d.msgbox("\nError reading YAML file. For more information, see the logs.", 7, 50, title = "Error Message")
+			form_dialog.mainMenu()
 
 	"""
 	Method that creates a new route from the root path of Snap-Tool.
@@ -86,6 +88,7 @@ class Utils:
 			return pass_key
 		except FileNotFoundError as exceptions:
 			self.logger.createLogTool(str(exceptions), 4)
+			print("\nFailed to get passphrase. For more information, see the logs.")
 			sys.exit(1)
 
 	"""
@@ -106,6 +109,7 @@ class Utils:
 	Parameters:
 	self -- An instantiated object of the Utils class.
 	file -- Path of the file from which the hash function will be obtained.
+	form_dialog -- A FormDialogs class object.
 
 	Return:
 	Hash obtained.
@@ -113,7 +117,7 @@ class Utils:
 	Exceptions:
 	Exception -- Thrown when any mistake happens.
 	"""
-	def getSha256File(self, file):
+	def getSha256File(self, file, form_dialog):
 		try:
 			hashsha = sha256()
 			with open(file, "rb") as file_hash:
@@ -121,7 +125,9 @@ class Utils:
 					hashsha.update(block)
 			return hashsha.hexdigest()
 		except Exception as exception:
-			self.logger.createLogTool("Error: " + str(exception), 4)
+			self.logger.createLogTool(str(exception), 4)
+			form_dialog.d.msgbox("\nError getting the file's hash. For more information, see the logs.", 7, 50, title = "Error Message")
+			form_dialog.mainMenu()
 
 	"""
 	Method that encrypts a text string.
@@ -129,16 +135,25 @@ class Utils:
 	Parameters:
 	self -- An instantiated object of the Utils class.
 	text -- Text to encrypt.
+	form_dialog -- A FormDialogs class object.
 
 	Return:
 	Encrypted text.
+
+	Exceptions:
+	binascii.Error -- Is raised if were incorrectly padded or if there are non-alphabet characters present in the string. 
 	"""
-	def encryptAES(self, text):
-		text_bytes = bytes(text, 'utf-8')
-		key = sha256(self.passphrase.encode()).digest()
-		IV = Random.new().read(AES.block_size)
-		aes = AES.new(key, AES.MODE_CBC, IV)
-		return b64encode(IV + aes.encrypt(pad(text_bytes, AES.block_size)))
+	def encryptAES(self, text, form_dialog):
+		try:
+			text_bytes = bytes(text, 'utf-8')
+			key = sha256(self.passphrase.encode()).digest()
+			IV = Random.new().read(AES.block_size)
+			aes = AES.new(key, AES.MODE_CBC, IV)
+			return b64encode(IV + aes.encrypt(pad(text_bytes, AES.block_size)))
+		except binascii.Error as exception:
+			self.logger.createLogTool(str(exception), 4)
+			form_dialog.d.msgbox("\nEncryption failed. For more information, see the logs.", 7, 50, title = "Error Message")
+			form_dialog.mainMenu()
 
 	"""
 	Method that decrypts a text string.
@@ -146,6 +161,7 @@ class Utils:
 	Parameters:
 	self -- An instantiated object of the Utils class.
 	text_encrypt -- Text to decipher.
+	form_dialog -- A FormDialogs class object.
 
 	Return:
 	Character string with decrypted text.
@@ -153,7 +169,7 @@ class Utils:
 	Exceptions:
 	binascii.Error -- Is raised if were incorrectly padded or if there are non-alphabet characters present in the string. 
 	"""
-	def decryptAES(self, text_encrypt):
+	def decryptAES(self, text_encrypt, form_dialog):
 		try:
 			key = sha256(self.passphrase.encode()).digest()
 			text_encrypt = b64decode(text_encrypt)
@@ -161,5 +177,6 @@ class Utils:
 			aes = AES.new(key, AES.MODE_CBC, IV)
 			return unpad(aes.decrypt(text_encrypt[AES.block_size:]), AES.block_size)
 		except binascii.Error as exception:
-			self.logger.createLogTool("Decrypt Error: " + str(exception), 4)
-			sys.exit(1)
+			self.logger.createLogTool(str(exception), 4)
+			form_dialog.d.msgbox("\nDecryption failed. For more information, see the logs.", 7, 50, title = "Error Message")
+			form_dialog.mainMenu()

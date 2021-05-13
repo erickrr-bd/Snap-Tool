@@ -57,15 +57,15 @@ class Configuration:
 		http_auth = form_dialog.getDataYesOrNo("\nIs the use of HTTP authentication required to connect to ElasticSearch?", "HTTP Authentication")
 		if http_auth == "ok":
 			data_conf.append(True)
-			user_http_auth = self.utils.encryptAES(form_dialog.getDataInputText("Enter the username for HTTP authentication:", "user_http"))
-			pass_http_auth = self.utils.encryptAES(form_dialog.getDataPassword("Enter the user's password for HTTP authentication:", "password"))
+			user_http_auth = self.utils.encryptAES(form_dialog.getDataInputText("Enter the username for HTTP authentication:", "user_http"), form_dialog)
+			pass_http_auth = self.utils.encryptAES(form_dialog.getDataPassword("Enter the user's password for HTTP authentication:", "password"), form_dialog)
 			data_conf.append(user_http_auth)
 			data_conf.append(pass_http_auth)
 		else:
 			data_conf.append(False)
 		repository_name = form_dialog.getDataInputText("Enter the name of the repository where the created snapshots will be saved:", "my_repository")
-		telegram_bot_token = self.utils.encryptAES(form_dialog.getDataInputText("Enter the Telegram bot token:", "751988420:AAHrzn7RXWxVQQNha0tQUzyouE5lUcPde1g"))
-		telegram_chat_id = self.utils.encryptAES(form_dialog.getDataInputText("Enter the Telegram channel identifier:", "-1002365478941"))
+		telegram_bot_token = self.utils.encryptAES(form_dialog.getDataInputText("Enter the Telegram bot token:", "751988420:AAHrzn7RXWxVQQNha0tQUzyouE5lUcPde1g"), form_dialog)
+		telegram_chat_id = self.utils.encryptAES(form_dialog.getDataInputText("Enter the Telegram channel identifier:", "-1002365478941"), form_dialog)
 		data_conf.append(repository_name)
 		data_conf.append(telegram_bot_token)
 		data_conf.append(telegram_chat_id)
@@ -146,7 +146,7 @@ class Configuration:
 		try:
 			with open(self.utils.getPathSTool('conf') + '/es_conf.yaml', "rU") as f:
 				data_conf = yaml.safe_load(f)
-			hash_origen = self.utils.getSha256File(self.utils.getPathSTool('conf') + '/es_conf.yaml')
+			hash_origen = self.utils.getSha256File(self.utils.getPathSTool('conf') + '/es_conf.yaml', form_dialog)
 			if flag_version == 1:
 				version_es = form_dialog.getDataNumberDecimal("Enter the ElasticSearch version:", str(data_conf['es_version']))
 				data_conf['es_version'] = str(version_es)
@@ -209,16 +209,16 @@ class Configuration:
 							if opt_mod == "Password":
 								flag_http_auth_pass = 1
 						if flag_http_auth_user == 1:
-							user_http_auth_mod = self.utils.encryptAES(form_dialog.getDataInputText("Enter the username for HTTP authentication:", self.utils.decryptAES(data_conf['http_auth_user']).decode('utf-8')))
+							user_http_auth_mod = self.utils.encryptAES(form_dialog.getDataInputText("Enter the username for HTTP authentication:", self.utils.decryptAES(data_conf['http_auth_user'], form_dialog).decode('utf-8')), form_dialog)
 							data_conf['http_auth_user'] = user_http_auth_mod.decode('utf-8')
 						if flag_http_auth_pass == 1:
-							pass_http_auth_mod = self.utils.encryptAES(form_dialog.getDataPassword("Enter the user's password for HTTP authentication:", "password"))
+							pass_http_auth_mod = self.utils.encryptAES(form_dialog.getDataPassword("Enter the user's password for HTTP authentication:", "password"), form_dialog)
 							data_conf['http_auth_pass'] = pass_http_auth_mod.decode('utf-8')
 				else:
 					opt_http_auth_false = form_dialog.getDataRadioList("Select a option:", options_http_auth_false, "HTTP Authentication")
 					if opt_http_auth_false == "Enable":
-						user_http_auth = self.utils.encryptAES(form_dialog.getDataInputText("Enter the username for HTTP authentication:", "user_http"))
-						pass_http_auth = self.utils.encryptAES(form_dialog.getDataPassword("Enter the user's password for HTTP authentication:", "password"))
+						user_http_auth = self.utils.encryptAES(form_dialog.getDataInputText("Enter the username for HTTP authentication:", "user_http"), form_dialog)
+						pass_http_auth = self.utils.encryptAES(form_dialog.getDataPassword("Enter the user's password for HTTP authentication:", "password", form_dialog))
 						http_auth_data = {'http_auth_user': user_http_auth.decode('utf-8'), 'http_auth_pass': pass_http_auth.decode('utf-8')}
 						data_conf.update(http_auth_data)
 						data_conf['use_http_auth'] = True
@@ -226,14 +226,14 @@ class Configuration:
 				repository_name = form_dialog.getDataInputText("Enter the name of the repository where the created snapshots will be saved:", str(data_conf['repository_name']))
 				data_conf['repository_name'] = str(repository_name)
 			if flag_bot_token == 1:
-				telegram_bot_token = self.utils.encryptAES(form_dialog.getDataInputText("Enter the Telegram bot token:", self.utils.decryptAES(data_conf['telegram_bot_token']).decode('utf-8')))
+				telegram_bot_token = self.utils.encryptAES(form_dialog.getDataInputText("Enter the Telegram bot token:", self.utils.decryptAES(data_conf['telegram_bot_token'], form_dialog).decode('utf-8')), form_dialog)
 				data_conf['telegram_bot_token'] = telegram_bot_token.decode('utf-8')
 			if flag_chat_id == 1:
-				telegram_chat_id = self.utils.encryptAES(form_dialog.getDataInputText("Enter the Telegram channel identifier:", self.utils.decryptAES(data_conf['telegram_chat_id']).decode('utf-8')))
+				telegram_chat_id = self.utils.encryptAES(form_dialog.getDataInputText("Enter the Telegram channel identifier:", self.utils.decryptAES(data_conf['telegram_chat_id'], form_dialog).decode('utf-8')), form_dialog)
 				data_conf['telegram_chat_id'] = telegram_chat_id.decode('utf-8')
 			with open(self.utils.getPathSTool('conf') + '/es_conf.yaml', "w") as file_update:
 				yaml.safe_dump(data_conf, file_update, default_flow_style = False)
-			hash_modify = self.utils.getSha256File(self.utils.getPathSTool('conf') + '/es_conf.yaml')
+			hash_modify = self.utils.getSha256File(self.utils.getPathSTool('conf') + '/es_conf.yaml', form_dialog)
 			if hash_origen == hash_modify:
 				form_dialog.d.msgbox("\nConfiguration file not modified", 7, 50, title = "Notification message")
 			else:
