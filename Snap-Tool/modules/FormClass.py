@@ -306,11 +306,11 @@ class FormDialogs:
 		options_conf_true = [("Modify configuration", "Modify the configuration file", 0)]
 		
 		if not os.path.exists(self.utils.getPathSTool("conf") + "/es_conf.yaml"):
-			opt_conf_false = self.getDataRadioList("Select a option", self.options_conf_false, "Configuration options")
+			opt_conf_false = self.getDataRadioList("Select a option", options_conf_false, "Configuration options")
 			if opt_conf_false == "Create configuration":
 				self.configuration.createConfiguration(FormDialogs())
 		else:
-			opt_conf_true = self.getDataRadioList("Select a option", self.options_conf_true, "Configuration options")
+			opt_conf_true = self.getDataRadioList("Select a option", options_conf_true, "Configuration options")
 			if opt_conf_true == "Modify configuration":
 				self.configuration.modifyConfiguration(FormDialogs())
 

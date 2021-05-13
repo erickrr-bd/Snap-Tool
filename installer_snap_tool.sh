@@ -1,7 +1,7 @@
 #! /bin/bash
 
 clear
-echo -e "\e[96m@2021 Tekium. All rights reserved.\e[0m"
+echo -e "\e[96m2021@Tekium. All rights reserved.\e[0m"
 echo ''
 echo -e '\e[96mInstaller for Snap-Tool v3.0\e[0m'
 echo ''
