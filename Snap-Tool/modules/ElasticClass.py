@@ -102,7 +102,7 @@ class Elastic:
 											use_ssl = True,
 											verify_certs = True,
 											ssl_context = context)
-			if conn_es.ping():
+			if not conn_es == None:
 				self.logger.createLogTool("Connection established to: " + snap_tool_conf['es_host'] + ':' + str(snap_tool_conf['es_port']), 2)
 				return conn_es
 		except KeyError as exception:
@@ -142,7 +142,7 @@ class Elastic:
 	"""
 	def createSnapshot(self, conn_es, repository_name, index_name, form_dialog):
 		try:
-			conn_es.snapshot.create(repository = repository_name, snapshot = index_name, body = { "indices": index_name }, wait_for_completion = True, request_timeout = 7200)
+			conn_es.snapshot.create(repository = repository_name, snapshot = index_name, body = { "indices" : index_name, "include_global_state" : False }, wait_for_completion = False)
 		except exceptions.RequestError as exception:
 			self.logger.createLogTool(str(exception), 4)
 			form_dialog.d.msgbox("\nFailed to create snapshot. For more information, see the logs.", 7, 50, title = "Error message")
@@ -151,6 +151,11 @@ class Elastic:
 			self.logger.createLogTool(str(exception), 4)
 			form_dialog.d.msgbox("\nFailed to create snapshot. For more information, see the logs.", 7, 50, title = "Error message")
 			form_dialog.mainMenu()
+		except exceptions.AuthorizationException as exception:
+			self.logger.createLogTool(str(exception), 4)
+			form_dialog.d.msgbox("\nFailed to create snapshot. For more information, see the logs.", 7, 50, title = "Error message")
+			form_dialog.mainMenu()
+
 
 	"""
 	Method that obtains the status of a snapshot.
@@ -251,6 +256,10 @@ class Elastic:
 		try:
 			conn_es.snapshot.delete(repository = repository_name, snapshot = snapshot_name, request_timeout = 7200)
 		except exceptions.NotFoundError as exception:
+			self.logger.createLogTool(str(exception), 4)
+			form_dialog.d.msgbox("\nFailed to delete snapshot(s). For more information, see the logs.", 7, 50, title = "Error message")
+			form_dialog.mainMenu()
+		except exceptions.AuthorizationException as exception:
 			self.logger.createLogTool(str(exception), 4)
 			form_dialog.d.msgbox("\nFailed to delete snapshot(s). For more information, see the logs.", 7, 50, title = "Error message")
 			form_dialog.mainMenu()

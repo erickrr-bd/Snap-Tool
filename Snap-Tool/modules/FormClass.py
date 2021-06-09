@@ -1,6 +1,8 @@
 import re
 import os
 import sys
+import time
+import threading
 from dialog import Dialog
 from modules.UtilsClass import Utils
 from modules.LoggerClass import Logger
@@ -343,23 +345,26 @@ class FormDialogs:
 						self.telegram.getStatusByTelegramCode(status_code_create)
 						self.logger.createLogTool("Snapshot creation started: " + option_index, 2)
 						self.elastic.createSnapshot(conn_es, snap_tool_conf['repository_name'], option_index, FormDialogs())
-						status_snapshot = self.elastic.getStatusSnapshot(conn_es, snap_tool_conf['repository_name'], option_index, FormDialogs())
-						if status_snapshot == 'SUCCESS':
-							status_snapshot_end = self.elastic.getStatus(conn_es, snap_tool_conf['repository_name'], option_index, FormDialogs())
-							message = self.telegram.getTelegramMessage("end_snapshot", option_index)
-							message += self.telegram.getMessageEndSnapshot(status_snapshot_end['snapshots'][0]['start_time'], status_snapshot_end['snapshots'][0]['end_time'])
-							status_code = self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id'], FormDialogs()).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token'], FormDialogs()).decode('utf-8'), message)
-							self.telegram.getStatusByTelegramCode(status_code)
-							self.logger.createLogTool("Snapshot creation completed: " + option_index, 2)
-							self.d.msgbox("\nSnapshot created. Index:\n- " + option_index, 7, 50, title = "Notification message")
-							delete_index = self.getDataYesOrNo("\nDo you want to delete the index that was backed up in the snapshot?\n\n- " + option_index, "Delete Index")
-							if delete_index == "ok":
-								self.elastic.deleteIndex(conn_es, option_index)
-								message_rindex = self.telegram.getTelegramMessage("delete_index", option_index)
-								status_code_rindex = self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id'], FormDialogs()).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token'], FormDialogs()).decode('utf-8'), message_rindex)
-								self.telegram.getStatusByTelegramCode(status_code_rindex)
-								self.logger.createLogTool("The index has been removed: " + option_index, 2)
-								self.d.msgbox("\nThe index has been removed: " + option_index, 7, 50, title = "Notification message")
+						while True:
+							status_snapshot = self.elastic.getStatusSnapshot(conn_es, snap_tool_conf['repository_name'], option_index, FormDialogs())
+							if status_snapshot == 'SUCCESS':
+								break
+							time.sleep(60)
+						status_snapshot_end = self.elastic.getStatus(conn_es, snap_tool_conf['repository_name'], option_index, FormDialogs())
+						message = self.telegram.getTelegramMessage("end_snapshot", option_index)
+						message += self.telegram.getMessageEndSnapshot(status_snapshot_end['snapshots'][0]['start_time'], status_snapshot_end['snapshots'][0]['end_time'])
+						status_code = self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id'], FormDialogs()).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token'], FormDialogs()).decode('utf-8'), message)
+						self.telegram.getStatusByTelegramCode(status_code)
+						self.logger.createLogTool("Snapshot creation completed: " + option_index, 2)
+						self.d.msgbox("\nSnapshot created. Index:\n- " + option_index, 7, 50, title = "Notification message")
+						delete_index = self.getDataYesOrNo("\nDo you want to delete the index that was backed up in the snapshot?\n\n- " + option_index, "Delete Index")
+						if delete_index == "ok":
+							self.elastic.deleteIndex(conn_es, option_index)
+							message_rindex = self.telegram.getTelegramMessage("delete_index", option_index)
+							status_code_rindex = self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id'], FormDialogs()).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token'], FormDialogs()).decode('utf-8'), message_rindex)
+							self.telegram.getStatusByTelegramCode(status_code_rindex)
+							self.logger.createLogTool("The index has been removed: " + option_index, 2)
+							self.d.msgbox("\nThe index has been removed: " + option_index, 7, 50, title = "Notification message")
 					self.mainMenu()
 				except KeyError as exception:
 					self.logger.createLogTool("Key Error: " + str(exception), 4)
