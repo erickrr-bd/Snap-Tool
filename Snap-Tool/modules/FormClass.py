@@ -2,7 +2,6 @@ import re
 import os
 import sys
 import time
-import threading
 from dialog import Dialog
 from modules.UtilsClass import Utils
 from modules.LoggerClass import Logger
