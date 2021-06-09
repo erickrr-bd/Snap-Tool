@@ -4,15 +4,19 @@ Author: Erick Rodríguez erickrr.tbd93@gmail.com
 
 License: GPLv3
 
-Snap-Tool is an application developed in Python, which uses a graphical interface, which allows the user to make a connection with ElasticSearch and to create and delete Snapshots, as well as to mount a snapshot as a searchable snapshot.
+Snap-Tool is a tool developed in Python, which allows the management of tasks related to ElasticSearch snapshots, through a graphical interface.
 
 # Applications
 ## Snap-Tool
-Application that allows you to create a snapshot of an index in ElasticSearch, delete the index when the creation process has finished, delete one or more snapshots and mount a snapshot as a searchable snapshot.
+Graphic application from where all the management in relation to the ElasticSearch snapshots is carried out. It has the ability to alert via Telegram.
 
 Characteristics:
 - The connection with ElasticSearch can be done through HTTPS and HTTP authentication (It must be configured in ElasticSearch).
-- Sending messages to a Telegram channel, where it is notified when the process starts and the creation of the snapshot ends, when an index is deleted, when one or more snapshots are deleted, when a searchable snapshot is mounted.
+- Allows you to create and modify the Snap-Tool connection settings.
+- Encrypts sensitive data such as passwords so that they are not stored in plain text.
+- Allows you to create a snapshot of a particular index. Snap-Tool will send an alert when the process begins and when it ends, in order not to have to be aware of the process. Once the snapshot has been created, it allows you to decide whether or not to delete the stored index. In case of deleting it, an alert will be sent with the notification that the index was deleted.
+- Allows you to delete one or more snapshots created. An alert will be sent for each snapshot deleted.
+- Allows you to mount a snapshot as a searchable snapshot (enterprise license required). An alert is sent when this action is performed on a snapshot.
 
 # Requirements
 - CentOS 8 (So far it has only been tested in this version)
@@ -28,7 +32,9 @@ Characteristics:
   - pyyaml
 
 # Installation
-Run the executable installer_snap_tool.sh, which is in charge of installing the packages and libraries necessary for the operation of Snap-Tool (these can also be installed manually). It is also responsible for copying and creating the necessary files and directories. Run with a user with administrator permissions.
+To install or update Snap-Tool, you must run the installer_snap_tool.sh executable with administrator rights. The installer will perform the following actions:
+- Copy and creation of directories and files necessary for the operation of Snap-Tool.
+- Creation of passphrase for the encryption and decryption of sensitive information, which is generated randomly, so it is unique for each installed Snap-Tool installation.
 
 # Commercial Support
 ![Tekium](https://github.com/unmanarc/uAuditAnalyzer2/blob/master/art/tekium_slogo.jpeg)
