@@ -1,13 +1,13 @@
 import re
-import os
-import sys
 import time
+from os import path
+from sys import exit
 from dialog import Dialog
 from modules.UtilsClass import Utils
 from modules.LoggerClass import Logger
-from modules.ElasticClass import Elastic
-from modules.TelegramClass import Telegram
-from modules.ConfigClass import Configuration
+#from modules.ElasticClass import Elastic
+#from modules.TelegramClass import Telegram
+from modules.ConfigurationClass import Configuration
 
 """
 Class that allows you to manage everything related to forms and data entry.
@@ -22,11 +22,6 @@ class FormDialogs:
 	Property that stores an object of type Utils.
 	"""
 	utils = None
-
-	"""
-	Property that stores an object of type Configuration.
-	"""
-	configuration = None
 
 	"""
 	Property that stores an object of type Elastic.
@@ -50,31 +45,30 @@ class FormDialogs:
 	self -- An instantiated object of the FormDialogs class.
 	"""
 	def __init__(self):
+		self.logger = Logger()
+		self.utils = Utils(self)
 		self.d = Dialog(dialog = "dialog")
 		self.d.set_background_title("SNAP-TOOL")
-		self.utils = Utils()
-		self.elastic = Elastic()
-		self.configuration = Configuration()
-		self.telegram = Telegram()
-		self.logger = Logger()
-
+		#self.elastic = Elastic()
+		#self.telegram = Telegram()
+		
 	"""
 	Method that generates the menu interface.
 
 	Parameters:
 	self -- An instantiated object of the FormDialogs class.
 	options -- List of options that make up the menu.
-	title -- Title that will be given to the interface and that will be shown to the user.
+	title -- Title displayed on the interface.
 
 	Return:
-	tag_mm -- The option chosen by the user.
+	tag_mm -- Chosen option.
 	"""
 	def getMenu(self, options, title):
-		code_mm, tag_mm = self.d.menu("Choose an option", choices=options,title=title)
+		code_mm, tag_mm = self.d.menu("Choose an option", choices = options, title = title)
 		if code_mm == self.d.OK:
 			return tag_mm
 		if code_mm == self.d.CANCEL:
-			sys.exit(0)
+			exit(0)
 
 	"""
 	Method that generates the message interface with scroll box.
@@ -112,16 +106,18 @@ class FormDialogs:
 				self.mainMenu()
 
 	"""
-	Method that generates the interface with a list of options, where only one can be chosen.
+	Method that generates an interface with several
+	available options, and where only one of them can be
+	chosen.
 
 	Parameters:
 	self -- An instantiated object of the FormDialogs class.
-	text -- Text that will be shown to the user.
+	text -- Text displayed on the interface.
 	options -- List of options that make up the interface.
-	title -- Title that will be given to the interface and that will be shown to the user.
+	title -- Title displayed on the interface.
 
 	Return:
-	tag_rl -- The option chosen by the user.
+	tag_rl -- Chosen option.
 	"""
 	def getDataRadioList(self, text, options, title):
 		while True:
@@ -132,13 +128,13 @@ class FormDialogs:
 					  title = title)
 			if code_rl == self.d.OK:
 				if len(tag_rl) == 0:
-					self.d.msgbox("\nSelect at least one option", 5, 50, title = "Error Message")
+					self.d.msgbox("\nSelect at least one option.", 8, 50, title = "Error Message")
 				else:
 					return tag_rl
 			if code_rl == self.d.CANCEL:
 				self.mainMenu()
 
-		"""
+	"""
 	Method that generates the interface with a list of options, where you can choose one or more.
 
 	Parameters:
@@ -159,7 +155,7 @@ class FormDialogs:
 					 title = title)
 			if code_cl == self.d.OK:
 				if len(tag_cl) == 0:
-					self.d.msgbox("\nSelect at least one option", 5, 50, title = "Error message")
+					self.d.msgbox("\nSelect at least one option.", 8, 50, title = "Error message")
 				else:
 					return tag_cl
 			if code_cl == self.d.CANCEL:
@@ -296,24 +292,27 @@ class FormDialogs:
 				self.mainMenu()
 
 	"""
-	Method that defines the action to be performed on the Snap-Tool configuration file (creation or modification).
+	Method that defines the action to be performed on the
+	Snap-Tool configuration file (creation or modification).
 
 	Parameters:
 	self -- An instantiated object of the FormDialogs class.
 	"""
-	def getDataConf(self):
-		options_conf_false = [("Create configuration", "Create the configuration file", 0)]
+	def defineConfiguration(self):
+		configuration = Configuration()
 
-		options_conf_true = [("Modify configuration", "Modify the configuration file", 0)]
-		
-		if not os.path.exists(self.utils.getPathSTool("conf") + "/es_conf.yaml"):
-			opt_conf_false = self.getDataRadioList("Select a option", options_conf_false, "Configuration options")
-			if opt_conf_false == "Create configuration":
-				self.configuration.createConfiguration(FormDialogs())
+		options_conf_false = [("Create", "Create the configuration file", 0)]
+
+		options_conf_true = [("Modify", "Modify the configuration file", 0)]
+
+		if not path.exists(self.utils.getPathSnapTool("conf") + "/snap_tool_conf.yaml"):
+			opt_conf_false = self.getDataRadioList("Select a option:", options_conf_false, "Configuration Options")
+			if opt_conf_false == "Create":
+				configuration.createConfiguration()
 		else:
-			opt_conf_true = self.getDataRadioList("Select a option", options_conf_true, "Configuration options")
-			if opt_conf_true == "Modify configuration":
-				self.configuration.modifyConfiguration(FormDialogs())
+			opt_conf_true = self.getDataRadioList("Select a option:", options_conf_true, "Configuration Options")
+			if opt_conf_true == "Modify":
+				configuration.modifyConfiguration()
 
 	"""
 	Method that obtains the list of indexes and select one of them to create a snapshot of it.
@@ -339,11 +338,11 @@ class FormDialogs:
 						self.d.msgbox("\nThere are no indexes", 7, 50, title = "Notification message")
 					else:
 						option_index = self.getDataRadioList("Select a option:", list_indices, "ElasticSearch Indexes")
+						self.elastic.createSnapshot(conn_es, snap_tool_conf['repository_name'], option_index, FormDialogs())
 						message_create = self.telegram.getTelegramMessage("create_snapshot", option_index)
 						status_code_create = self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id'], FormDialogs()).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token'], FormDialogs()).decode('utf-8'), message_create)
 						self.telegram.getStatusByTelegramCode(status_code_create)
 						self.logger.createLogTool("Snapshot creation started: " + option_index, 2)
-						self.elastic.createSnapshot(conn_es, snap_tool_conf['repository_name'], option_index, FormDialogs())
 						while True:
 							status_snapshot = self.elastic.getStatusSnapshot(conn_es, snap_tool_conf['repository_name'], option_index, FormDialogs())
 							if status_snapshot == 'SUCCESS':
@@ -439,10 +438,11 @@ class FormDialogs:
 						self.telegram.getStatusByTelegramCode(status_code)
 						self.logger.createLogTool("Snapshot mounted as searchable snapshot: " + option_snapshot, 2)
 						self.d.msgbox("\nSnapshot mounted as a searchable snapshot: " + option_snapshot, 7, 50, title = "Notification message")
+					self.mainMenu()
 				except KeyError as exception:
 					self.logger.createLogTool("Key Error: " + str(exception), 4)
 					self.d.msgbox("\nKey Error: " + str(exception), 7, 50, title = "Error message")
-					sys.exit(1)
+					exit(1)
 
 	"""
 	Method that displays a message on the screen with information about the application.
@@ -455,7 +455,8 @@ class FormDialogs:
 		self.getScrollBox(message, "About")
 
 	"""
-	Method that launches an action based on the option chosen in the main menu.
+	Method that launches an action based on the option chosen
+	in the main menu.
 
 	Parameters:
 	self -- An instantiated object of the FormDialogs class.
@@ -463,8 +464,8 @@ class FormDialogs:
 	"""
 	def switchMmenu(self, option):
 		if option == 1:
-			self.getDataConf()
-		if option == 2:
+			self.defineConfiguration()
+		"""if option == 2:
 			self.getCreateSnapshot()
 		if option == 3:
 			self.getDeleteSnapshot()
@@ -473,21 +474,26 @@ class FormDialogs:
 		if option == 5:
 			self.getAbout()
 		if option == 6:
-			sys.exit(0)
+			self.elastic.getInformationNodesElastic()
+		if option == 8:
+			exit(0)"""
 
 	"""
-	Method that defines the menu on the actions to be carried out in the main menu.
+	Method that defines the menu on the actions to be carried
+	out in the main menu.
 
 	Parameters:
 	self -- An instantiated object of the FormDialogs class.
 	"""
 	def mainMenu(self):
 		options_mm = [("1", "Snap-Tool Configuration"),
-					  ("2", "Create Snapshot"),
-					  ("3", "Delete Snapshot"),
-					  ("4", "Create Searchable Snapshot"),
-					  ("5", "About"),
-					  ("6", "Exit")]
+					  ("2", "Create repository"),
+					  ("3", "Create Snapshot"),
+					  ("4", "Delete Snapshot"),
+					  ("5", "Create Searchable Snapshot"),
+					  ("6", "Nodes information"),
+					  ("7", "About"),
+					  ("8", "Exit")]
 
 		option_mm = self.getMenu(options_mm, "Main Menu")
 		self.switchMmenu(int(option_mm))

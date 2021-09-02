@@ -309,6 +309,10 @@ class Elastic:
 			list_indices.append((index_aux, "Index Name", 0))
 		return list_indices
 
+
+	def getInformationNodesElastic(self, conn_es):
+		print(conn_es.NodesClient.info())
+
 	"""
 	Method that removes an index in ElasticSearch.
 
