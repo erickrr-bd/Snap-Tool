@@ -39,6 +39,28 @@ class Utils:
 		self.passphrase = self.getPassphrase()
 
 	"""
+	Method that creates a YAML file.
+
+	Parameters:
+	self -- An instantiated object of the Utils class.
+	data -- Information that will be stored in the YAML file.
+	path_file_yaml -- YAML file path.
+	mode -- Mode in which the YAML file will be opened.
+
+	Exceptions:
+	IOError -- It is an error raised when an input/output
+	           operation fails.
+	"""
+	def createYamlFile(self, data, path_file_yaml, mode):
+		try:
+			with open(path_file_yaml, mode) as file_yaml:
+				safe_dump(data, file_yaml, default_flow_style = False)
+		except IOError as exception:
+			self.logger.createSnapToolLog(exception, 3)
+			self.form_dialog.d.msgbox("\nError creating YAML file. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.form_dialog.mainMenu()
+
+	"""
 	Method that obtains and stores the content of a YAML file
 	in a variable.
 
@@ -60,7 +82,7 @@ class Utils:
 			with open(path_file_yaml, mode) as file_yaml:
 				data_file_yaml = safe_load(file_yaml)
 		except IOError as exception:
-			self.createSnapToolLog(exception, 3)
+			self.logger.createSnapToolLog(exception, 3)
 			self.form_dialog.d.msgbox("\nError opening or reading the YAML file. For more information, see the logs.", 8, 50, title = "Error Message")
 			self.form_dialog.mainMenu()
 		else:
@@ -121,7 +143,7 @@ class Utils:
 			pass_key = file_key.read()
 			file_key.close()
 		except FileNotFoundError as exception:
-			self.createSnapToolLog(exception, 3)
+			self.logger.createSnapToolLog(exception, 3)
 			self.form_dialog.d.msgbox("\nError opening or reading the Key file. For more information, see the logs.", 8, 50, title = "Error Message")
 			self.form_dialog.mainMenu()
 		else:
@@ -167,7 +189,7 @@ class Utils:
 				for block in iter(lambda: file_to_hash.read(4096), b""):
 					hash_sha.update(block)
 		except IOError as exception:
-			self.createSnapToolLog(exception, 3)
+			self.logger.createSnapToolLog(exception, 3)
 			self.form_dialog.d.msgbox("\nError getting the file's hash function. For more information, see the logs.", 8, 50, title = "Error Message")
 			self.form_dialog.mainMenu()
 		else:
@@ -196,7 +218,7 @@ class Utils:
 			IV = Random.new().read(AES.block_size)
 			aes = AES.new(key, AES.MODE_CBC, IV)
 		except Exception as exception:
-			self.createSnapToolLog(exception, 3)
+			self.logger.createSnapToolLog(exception, 3)
 			self.form_dialog.d.msgbox("\nFailed to encrypt the data. For more information, see the logs.", 8, 50, title = "Error Message")
 			self.form_dialog.mainMenu()
 		else:
@@ -225,7 +247,7 @@ class Utils:
 			IV = text_encrypt[:AES.block_size]
 			aes = AES.new(key, AES.MODE_CBC, IV)
 		except binascii.Error as exception:
-			self.createSnapToolLog(exception, 3)
+			self.logger.createSnapToolLog(exception, 3)
 			self.form_dialog.d.msgbox("\nFailed to decrypt the data. For more information, see the logs.", 8, 50, title = "Error Message")
 			self.form_dialog.mainMenu()
 		else:

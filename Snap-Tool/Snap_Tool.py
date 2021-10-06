@@ -1,11 +1,11 @@
 #! /usr/bin/env python3
 
-from modules.FormClass import FormDialogs
+from modules.FormClass import FormDialog
 
 """
 FormDialogs type object.
 """
-forms = FormDialogs()
+forms = FormDialog()
 
 """
 Main function of the application
