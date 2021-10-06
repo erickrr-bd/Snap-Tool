@@ -1,8 +1,10 @@
 from sys import exit
 from os import path
+from pathlib import Path
 from dialog import Dialog
 from re import compile as re_compile
 from modules.UtilsClass import Utils
+from modules.ElasticClass import Elastic
 from modules.ConfigurationClass import Configuration
 
 class FormDialog:
@@ -17,14 +19,20 @@ class FormDialog:
 	utils = None
 
 	"""
+	Property that stores an object of type Elastic.
+	"""
+	elastic = None
+
+	"""
 	Constructor for the FormDialogs class.
 
 	Parameters:
 	self -- An instantiated object of the FormDialogs class.
 	"""
 	def __init__(self):
-		self.utils = Utils(self)
 		self.d = Dialog(dialog = "dialog")
+		self.utils = Utils(self)
+		self.elastic = Elastic(self)
 		self.d.set_background_title("SNAP-TOOL")
 
 	"""
@@ -226,6 +234,34 @@ class FormDialog:
 				self.mainMenu()
 
 	"""
+	Method that generates an interface with several
+	available options, and where you can choose one or more
+	of them.
+
+	Parameters:
+	self -- An instantiated object of the FormDialogs class.
+	text -- Text displayed on the interface.
+	options -- List of options that make up the interface.
+	title -- Title displayed on the interface.
+
+	Return:
+	tag_checklist -- List with the chosen options.
+	"""
+	def getDataCheckList(self, text, options, title):
+		while True:
+			code_checklist, tag_checklist = self.d.checklist(text = text,
+					 										 width = 75,
+					 										 choices = options,
+					 										 title = title)
+			if code_checklist == self.d.OK:
+				if len(tag_checklist) == 0:
+					self.d.msgbox("\nSelect at least one option.", 7, 50, title = "Error Message")
+				else:
+					return tag_checklist
+			elif code_checklist == self.d.CANCEL:
+				self.mainMenu()
+
+	"""
 	Method that generates an interface to select a file.
 
 	Parameters:
@@ -253,6 +289,22 @@ class FormDialog:
 						return tag_fselect
 			elif code_fselect == self.d.CANCEL:
 				self.mainMenu()
+				
+	"""
+	Method that generates an interface with scroll box.
+
+	Parameters:
+	self -- An instantiated object of the FormDialogs class.
+	text -- Text displayed on the interface.
+	title -- Title displayed on the interface.
+	"""
+	def getScrollBox(self, text, title):
+		code_scrollbox = self.d.scrollbox(text = text,
+										  height = 15,
+										  width = 70,
+										  title = title)
+		if code_scrollbox == self.d.OK:
+			self.mainMenu()
 
 	"""
 	Method that defines the action to be performed on the
@@ -295,9 +347,10 @@ class FormDialog:
 		if option == 4:
 			self.getCreateSearchSnapshot()
 		if option == 5:
-			self.getAbout()
+			self.getAbout()"""
 		if option == 6:
-			self.elastic.getInformationNodesElastic()"""
+			conn_es = self.elastic.getConnectionElastic()
+			self.elastic.getNodesDiskSpace(conn_es)
 		if option == 8:
 			exit(0)
 
