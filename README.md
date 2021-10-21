@@ -1,4 +1,4 @@
-# Snap-Tool v3.0
+# Snap-Tool v3.1
 
 Author: Erick Rodríguez erickrr.tbd93@gmail.com
 
