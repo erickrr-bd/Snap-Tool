@@ -6,8 +6,7 @@ from modules.UtilsClass import Utils
 from modules.LoggerClass import Logger
 
 """
-Class that allows you to manage the sending of alerts
-through Telegram.
+Class that allows you to manage the sending of alerts through Telegram.
 """
 class Telegram:
 	"""
@@ -25,6 +24,7 @@ class Telegram:
 
 	Parameters:
 	self -- An instantiated object of the Telegram class.
+	form_dialog -- FormDialog class object.
 	"""
 	def __init__(self, form_dialog):
 		self.logger = Logger()
@@ -38,9 +38,6 @@ class Telegram:
 	telegram_chat_id -- Telegram channel identifier to which the letter will be sent.
 	telegram_bot_token -- Token of the Telegram bot that is the administrator of the Telegram channel to which the alerts will be sent.
 	message -- Message to be sent to the Telegram channel.
-
-	Return:
-	HTTP code of the request to Telegram.
 	"""
 	def sendTelegramAlert(self, telegram_chat_id, telegram_bot_token, message):
 		if len(message) > 4096:
@@ -54,38 +51,10 @@ class Telegram:
 		c.perform_rs()
 		status_code = c.getinfo(HTTP_CODE)
 		c.close()
-		return int(status_code)
+		self.getStatusByTelegramCode(status_code)
 
 	"""
-	Method that generates the message that will be sent by Telegram.
-
-	Parameters:
-	self -- An instantiated object of the Telegram class.
-	action -- Action performed.
-	snapshot_name -- Name of the snapshot.
-
-	Return: 
-	message -- Character string with the formed message.
-	"""
-	def getTelegramMessage(self, action, snapshot_name):
-		message = u'\u26A0\uFE0F' + " " + 'Snap-Tool' +  " " + u'\u26A0\uFE0F' + '\n\n' + u'\u23F0' + " Alert sent: " + strftime("%c") + "\n\n\n"
-		if action == "create_snapshot":
-			message += u'\u2611\uFE0F' + " Action: Snapshot creation started\n"
-		if action == "end_snapshot":
-			message += u'\u2611\uFE0F' + " Action: Snapshot creation completed\n"
-		if action == "delete_snapshot":
-			message += u'\u2611\uFE0F' + " Action: Snaphot removed\n"
-		if action == "mount_snapshot":
-			message += u'\u2611\uFE0F' + " Action: Snapshot mounted as searchable snapshot\n"
-		if action == "delete_index":
-			message += u'\u2611\uFE0F' + " Action: Index removed\n"
-		message += u'\u2611\uFE0F' + " Snapshot name: " + snapshot_name +"\n"
-		message += u'\u2611\uFE0F' + " Index name: " + snapshot_name + "\n"
-		return message
-
-	"""
-	Method that creates the header of the message that will
-	be sent to Telegram.
+	Method that creates the header of the message that will be sent to Telegram.
 
 	Parameters:
 	self -- An instantiated object of the Telegram class.
@@ -98,12 +67,11 @@ class Telegram:
 		return header
 
 	"""
-	Method that generates the message in Telegram for when a
-	snapshot is deleted.
+	Method that generates the message in Telegram for when a snapshot is deleted.
 
 	Parameters:
 	self -- An instantiated object of the Telegram class.
-	snapshot_name -- Name of the snapshot.
+	snapshot_name -- Name of the deleted snapshot.
 
 	Return:
 	message -- Message to send.
@@ -112,33 +80,108 @@ class Telegram:
 		message = self.getHeaderMessage()
 		message += u'\u2611\uFE0F' + " Action: Snaphot removed\n"
 		message += u'\u2611\uFE0F' + " Snapshot name: " + snapshot_name +"\n"
-		message += u'\u2611\uFE0F' + " Index name: " + snapshot_name + "\n"
+		message += u'\u2611\uFE0F' + " Index name: " + snapshot_name
 		return message
 
 	"""
-	Method that generates the message when the snapshot has finished being created.
+	Method that generates the message in Telegram when a snapshot is restored.
 
 	Parameters:
 	self -- An instantiated object of the Telegram class.
-	start_time -- Snapshot creation start time.
-	end_time -- Snapshot creation end time.
+	repository_name -- Name of the repository where the snapshot to be restored is hosted.
+	snapshot_name -- Name of the restored snapshot.
 
-	Return: 
-	message -- Character string with the formed message.
+	Return:
+	message -- Message to send.
 	"""
-	def getMessageEndSnapshot(self, start_time, end_time):
-		message = u'\u2611\uFE0F' + " Start time: " + str(start_time) + "\n"
+	def getMessageRestoreSnapshot(self, repository_name, snapshot_name):
+		message = self.getHeaderMessage()
+		message += u'\u2611\uFE0F' + " Action: Snapshot restore\n"
+		message += u'\u2611\uFE0F' + " Snapshot name: " + snapshot_name +"\n"
+		message += u'\u2611\uFE0F' + " Repository name: " + repository_name
+		return message
+
+	"""
+	Method that generates the message in Telegram when a snapshot is mounted as a searchable snapshot.
+
+	Parameters:
+	self -- An instantiated object of the Telegram class.
+	repository_name -- Name of the repository where the snapshot that will be mounted as a searchable snapshot is stored.
+	snapshot_name -- Name of the snapshot to be mounted as a searchable snapshot.
+
+	Return:
+	message -- Message to send.
+	"""
+	def getMessageSearchableSnapshot(self, repository_name, snapshot_name):
+		message = self.getHeaderMessage()
+		message += u'\u2611\uFE0F' + " Action: Snapshot mounted as a searchable snapshot\n"
+		message += u'\u2611\uFE0F' + " Snapshot name: " + snapshot_name +"\n"
+		message += u'\u2611\uFE0F' + " Repository name: " + repository_name
+		return message
+
+	"""
+	Method that generates the message in Telegram for when the creation of a snapshot has begun.
+
+	Parameters:
+	self -- An instantiated object of the Telegram class.
+	index_name -- Name of the index that will be saved in the snapshot.
+	repository_name -- Name of the repository where the snapshot will be saved.
+
+	Return:
+	message -- Message to send.
+	"""
+	def getMessageStartCreationSnapshot(self, index_name, repository_name):
+		message = self.getHeaderMessage()
+		message += u'\u2611\uFE0F' + " Action: Snapshot creation has started\n"
+		message += u'\u2611\uFE0F' + " Snapshot name: " + index_name +"\n"
+		message += u'\u2611\uFE0F' + " Index name: " + index_name + "\n"
+		message += u'\u2611\uFE0F' + " Repository name: " + repository_name
+		return message
+
+	"""
+	Method that generates the message in Telegram for when the creation of a snapshot has finished.
+
+	Parameters:
+	self -- An instantiated object of the Telegram class.
+	snapshot_name -- Name of the snapshot created.
+	repository_name -- Name of the repository where the snapshot was saved.
+	start_time -- Time when snapshot creation started.
+	end_time -- Time when snapshot creation finished.
+
+	Return:
+	message -- Message to send.
+	"""
+	def getMessageEndSnapshot(self, snapshot_name, repository_name, start_time, end_time):
+		message = self.getHeaderMessage()
+		message += u'\u2611\uFE0F' + " Action: Snapshot creation completed\n"
+		message += u'\u2611\uFE0F' + " Snapshot name: " + snapshot_name +"\n"
+		message += u'\u2611\uFE0F' + " Repository name: " + repository_name + "\n"
+		message += u'\u2611\uFE0F' + " Start time: " + str(start_time) + "\n"
 		message += u'\u2611\uFE0F' + " End time: " + str(end_time)
+		return message
+
+	"""
+	Method that generates the message in Telegram for when an index is eliminated.
+
+	Parameters:
+	self -- An instantiated object of the Telegram class.
+	index_name -- Index name removed.
+
+	Return:
+	message -- Message to send.
+	"""
+	def getMessageDeleteIndex(self, index_name):
+		message = self.getHeaderMessage()
+		message += u'\u2611\uFE0F' + " Action: Index removed\n"
+		message += u'\u2611\uFE0F' + " Index name: " + index_name
 		return message
 	
 	"""
-	Method that prints the status of the alert delivery based
-	on the response HTTP code.
+	Method that prints the status of the alert delivery based on the response HTTP code.
 
 	Parameters:
 	self -- An instantiated object of the Telegram class.
-	telegram_code -- HTTP code in response to the request made
-					 to Telegram.
+	telegram_code -- HTTP code in response to the request made to Telegram.
 	"""
 	def getStatusByTelegramCode(self, telegram_code):
 		if telegram_code == 200:

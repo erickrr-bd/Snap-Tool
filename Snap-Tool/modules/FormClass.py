@@ -5,11 +5,13 @@ from pathlib import Path
 from dialog import Dialog
 from re import compile as re_compile
 from modules.UtilsClass import Utils
+from modules.LoggerClass import Logger
 from modules.ElasticClass import Elastic
 from modules.TelegramClass import Telegram
 from modules.ConfigurationClass import Configuration
 
 """
+Class that manages everything related to forms.
 """
 class FormDialog:
 	"""
@@ -27,8 +29,19 @@ class FormDialog:
 	"""
 	elastic = None
 
+	"""
+	Property that stores an object of type Logger.
+	"""
+	logger = None
+
+	"""
+	Property that stores an object of type Telegram.
+	"""
 	telegram = None
 
+	"""
+	Property that stores the path of the configuration file.
+	"""
 	path_conf_file = None
 
 	"""
@@ -39,6 +52,7 @@ class FormDialog:
 	"""
 	def __init__(self):
 		self.d = Dialog(dialog = "dialog")
+		self.logger = Logger()
 		self.utils = Utils(self)
 		self.elastic = Elastic(self)
 		self.telegram = Telegram(self)
@@ -67,8 +81,7 @@ class FormDialog:
 			exit(0)
 
 	"""
-	Method that generates the interface for entering decimal
-	or floating type data.
+	Method that generates the interface for entering decimal or floating type data.
 
 	Parameters:
 	self -- An instantiated object of the FormDialogs class.
@@ -94,8 +107,7 @@ class FormDialog:
 				self.mainMenu()
 
 	"""
-	Method that generates an interface to enter an IP
-	address.
+	Method that generates an interface to enter an IP address.
 
 	Parameters:
 	self -- An instantiated object of the FormDialogs class.
@@ -198,8 +210,7 @@ class FormDialog:
 				self.mainMenu()
 
 	"""
-	Method that generates a decision-making interface
-	(yes / no).
+	Method that generates a decision-making interface (yes / no).
 
 	Parameters:
 	self -- An instantiated object of the FormDialogs class.
@@ -217,9 +228,7 @@ class FormDialog:
 		return tag_yesno
 
 	"""
-	Method that generates an interface with several
-	available options, and where only one of them can be
-	chosen.
+	Method that generates an interface with several available options, and where only one of them can be chosen.
 
 	Parameters:
 	self -- An instantiated object of the FormDialogs class.
@@ -245,9 +254,7 @@ class FormDialog:
 				self.mainMenu()
 
 	"""
-	Method that generates an interface with several
-	available options, and where you can choose one or more
-	of them.
+	Method that generates an interface with several available options, and where you can choose one or more of them.
 
 	Parameters:
 	self -- An instantiated object of the FormDialogs class.
@@ -318,8 +325,7 @@ class FormDialog:
 			self.mainMenu()
 
 	"""
-	Method that defines the action to be performed on the
-	Snap-Tool configuration file (creation or modification).
+	Method that defines the action to be performed on the Snap-Tool configuration file (creation or modification).
 
 	Parameters:
 	self -- An instantiated object of the FormDialog class.
@@ -344,16 +350,13 @@ class FormDialog:
 		print("Hola")
 
 	"""
-	Method that creates a snapshot of a particular index and
-	allows the index to be deleted or not.
+	Method that creates a snapshot of a particular index and allows the index to be deleted or not.
 
 	Parameters:
 	self -- An instantiated object of the FormDialog class.
 
 	Exceptions:
-	KeyError -- A Python KeyError exception is what is raised
-				when you try to access a key that isn’t in a
-				dictionary (dict). 
+	KeyError -- A Python KeyError exception is what is raised when you try to access a key that isn’t in a dictionary (dict). 
 	"""
 	def createSnapshot(self):
 		try:
@@ -363,27 +366,40 @@ class FormDialog:
 				snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
 				conn_es = self.elastic.getConnectionElastic()
 				list_aux_indices = self.elastic.getIndices(conn_es)
-				list_all_indices = self.utils.convertListToCheckOrRadioList(list_aux_indices)
+				list_all_indices = self.utils.convertListToCheckOrRadioList(list_aux_indices, "Index name")
 				opt_index = self.getDataRadioList("Select a option:", list_all_indices, "Indices")
 				list_aux_repositories = self.elastic.getAllRepositories(conn_es)
-				list_all_repositories = self.utils.convertListToCheckOrRadioList(list_aux_repositories)
+				list_all_repositories = self.utils.convertListToCheckOrRadioList(list_aux_repositories, "Repository name")
 				opt_repo = self.getDataRadioList("Select a option:", list_all_repositories, "Repositories")
 				self.elastic.createSnapshot(conn_es, opt_repo, opt_index)
+				message_creation_start = self.telegram.getMessageStartCreationSnapshot(opt_index, opt_repo)
+				self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_creation_start)
+				self.logger.createSnapToolLog("Snapshot creation has started: " + opt_index, 1)
 				while True:
 					status_snapshot = self.elastic.getStatusSnapshot(conn_es, opt_repo, opt_index)
 					if status_snapshot == "SUCCESS":
 						break
 					sleep(60)
+				snapshot_info = self.elastic.getSnapshotInfo(conn_es, opt_repo, opt_index)
+				self.logger.createSnapToolLog("Snapshot creation has finished: " + opt_index, 1)
+				message_creation_end = self.telegram.getMessageEndSnapshot(opt_index, opt_repo, snapshot_info['snapshots'][0]['start_time'], snapshot_info['snapshots'][0]['end_time'])
+				self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_creation_end)
 				self.d.msgbox("\nSnapshot created: " + opt_index, 7, 50, title = "Notification Message")
 				if snap_tool_conf['is_delete_index'] == True:
 					self.elastic.deleteIndex(conn_es, opt_index)
 					if not conn_es.indices.exists(opt_index):
+						self.logger.createSnapToolLog("Index removed: " + opt_index, 1)
+						message_delete_index = self.telegram.getMessageDeleteIndex(opt_index)
+						self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_delete_index)
 						self.d.msgbox("\nIndex removed: " + opt_index, 7, 50, title = "Notification Message")
 				else:
 					delete_index = self.getDataYesOrNo("\nDo you want to delete the index?\n\n- " + opt_index, "Delete Index")
 					if delete_index == "ok":
 						self.elastic.deleteIndex(conn_es, opt_index)
 						if not conn_es.indices.exists(opt_index):
+							self.logger.createSnapToolLog("Index removed: " + opt_index, 1)
+							message_delete_index = self.telegram.getMessageDeleteIndex(opt_index)
+							self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_delete_index)
 							self.d.msgbox("\nIndex removed: " + opt_index, 7, 50, title = "Notification Message")
 				conn_es.transport.close()
 			self.mainMenu()
@@ -393,16 +409,13 @@ class FormDialog:
 			self.mainMenu()
 
 	"""
-	Method that removes one or more snapshots from
-	ElasticSearch.
+	Method that removes one or more snapshots from ElasticSearch.
 
 	Parameters:
 	self -- An instantiated object of the FormDialog class.
 
 	Exceptions:
-	KeyError -- A Python KeyError exception is what is raised
-				when you try to access a key that isn’t in a
-				dictionary (dict). 
+	KeyError -- A Python KeyError exception is what is raised when you try to access a key that isn’t in a dictionary (dict). 
 	"""
 	def deleteSnapshot(self):
 		try:
@@ -427,8 +440,8 @@ class FormDialog:
 						if delete_snapshot == "ok":
 							for snapshot in opt_snapshots:
 								self.elastic.deleteSnapshotElastic(conn_es, opt_repo, snapshot)
-								message_telegram = self.telegram.getMessageDeleteSnapshot(snapshot)
-								self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_telegram)
+								message_delete_snapshot = self.telegram.getMessageDeleteSnapshot(snapshot)
+								self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_delete_snapshot)
 							message = "\nThe following snapshots were removed:\n\n"
 							message += self.utils.convertListToString(opt_snapshots)
 							self.getScrollBox(message, "Snapshot(s) deleted")
@@ -439,9 +452,87 @@ class FormDialog:
 			self.mainMenu()
 
 	"""
-	Method that displays information related to the percentage
-	of occupied disk space of the nodes of the elasticsearch
-	cluster.
+	Method that restores a particular snapshot from ElasticSearch.
+
+	Parameters:
+	self -- An instantiated object of the FormDialog class.
+
+	Exceptions:
+	KeyError -- A Python KeyError exception is what is raised when you try to access a key that isn’t in a dictionary (dict).
+	"""
+	def restoreSnapshot(self):
+		try:
+			if not path.exists(self.path_conf_file):
+				self.d.msgbox("\nConfiguration file not found.", 7, 50, title = "Error Message")
+			else:
+				snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
+				conn_es = self.elastic.getConnectionElastic()
+				list_aux_repositories = self.elastic.getAllRepositories(conn_es)
+				if len(list_aux_repositories) == 0:
+					self.d.msgbox("\nThere are no repositories created.", 7, 50, title = "Notification Message")
+				else:
+					list_all_repositories = self.utils.convertListToCheckOrRadioList(list_aux_repositories, "Repository Name")
+					opt_repo = self.getDataRadioList("Select a option:", list_all_repositories, "Repositories")
+					list_aux_snapshots = self.elastic.getAllSnapshots(conn_es, opt_repo)
+					if len(list_aux_snapshots) == 0:
+						self.d.msgbox("\nThere are no snapshots created.", 7, 50, title = "Notification Message")
+					else:
+						list_all_snapshots = self.utils.convertListToCheckOrRadioList(list_aux_snapshots, "Snapshot Name")
+						opt_snapshot = self.getDataRadioList("Select a option:", list_all_snapshots, "Snapshots")
+						self.elastic.restoreSnapshot(conn_es, opt_repo, opt_snapshot)
+						message_restore_snapshot = self.telegram.getMessageRestoreSnapshot(opt_repo, opt_snapshot)
+						self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_restore_snapshot)
+						self.logger.createSnapToolLog("Snapshot restored: " + opt_snapshot, 1)
+						self.d.msgbox("\nSnapshot restored: " + opt_snapshot + '.', 7, 50, title = "Notification Message")
+				conn_es.transport.close()
+				self.mainMenu()
+		except KeyError as exception:
+			self.logger.createSnapToolLog(exception, 3)
+			self.d.msgbox("\nFailed to restore snapshot. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.mainMenu()
+
+	"""
+	Method that mounts a snapshot as a searchable snapshot in ElasticSearch.
+
+	Parameters:
+	self -- An instantiated object of the FormDialog class.
+
+	Exceptions:
+	KeyError -- A Python KeyError exception is what is raised when you try to access a key that isn’t in a dictionary (dict).
+	"""
+	def mountSearchableSnapshot(self):
+		try:
+			if not path.exists(self.path_conf_file):
+				self.d.msgbox("\nConfiguration file not found.", 7, 50, title = "Error Message")
+			else:
+				snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
+				conn_es = self.elastic.getConnectionElastic()
+				list_aux_repositories = self.elastic.getAllRepositories(conn_es)
+				if len(list_aux_repositories) == 0:
+					self.d.msgbox("\nThere are no repositories created.", 7, 50, title = "Notification Message")
+				else:
+					list_all_repositories = self.utils.convertListToCheckOrRadioList(list_aux_repositories, "Repository Name")
+					opt_repo = self.getDataRadioList("Select a option:", list_all_repositories, "Repositories")
+					list_aux_snapshots = self.elastic.getAllSnapshots(conn_es, opt_repo)
+					if len(list_aux_snapshots) == 0:
+						self.d.msgbox("\nThere are no snapshots created.", 7, 50, title = "Notification Message")
+					else:
+						list_all_snapshots = self.utils.convertListToCheckOrRadioList(list_aux_snapshots, "Snapshot Name")
+						opt_snapshot = self.getDataRadioList("Select a option:", list_all_snapshots, "Snapshots")
+						self.elastic.mountSearchableSnapshot(conn_es, opt_repo, opt_snapshot)
+						message_searchable_snapshot = self.telegram.getMessageSearchableSnapshot(opt_repo, opt_snapshot)
+						self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_searchable_snapshot)
+						self.logger.createSnapToolLog("Snapshot mounted as searchable snapshot: " + opt_snapshot, 1)
+						self.d.msgbox("\nSnapshot mounted as searchable snapshot: " + opt_snapshot + '.', 8, 50, title = "Notification Message")
+				conn_es.transport.close()
+				self.mainMenu()
+		except KeyError as exception:
+			self.logger.createSnapToolLog(exception, 3)
+			self.d.msgbox("\nFailed to mount snapshot as a searchable snapshot. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.mainMenu()
+
+	"""
+	Method that displays information related to the percentage of occupied disk space of the nodes of the elasticsearch cluster.
 
 	Parameters:
 	self -- An instantiated object of the FormDialog class.
@@ -460,8 +551,7 @@ class FormDialog:
 		self.getScrollBox(message, "Node Information")
 
 	"""
-	Method that displays a message on the screen with
-	information about the application.
+	Method that displays a message on the screen with information about the application.
 
 	Parameters:
 	self -- An instantiated object of the FormDialog class.
@@ -471,8 +561,7 @@ class FormDialog:
 		self.getScrollBox(message, "About")
 
 	"""
-	Method that launches an action based on the option chosen
-	in the main menu.
+	Method that launches an action based on the option chosen in the main menu.
 
 	Parameters:
 	self -- An instantiated object of the FormDialog class.
@@ -484,7 +573,7 @@ class FormDialog:
 		elif option == 2:
 			self.createRepository()
 		elif option == 3:
-			self.createSnapshot()
+			self.snapshotMenu()
 		elif option == 4:
 			self.deleteSnapshot()
 		"""
@@ -492,30 +581,59 @@ class FormDialog:
 			self.getCreateSearchSnapshot()
 		if option == 5:
 			self.getAbout()"""
-		if option == 7:
+		if option == 5:
 			self.showNodesDiskSpace()
-		elif option == 8:
+		elif option == 6:
 			self.getAbout()
-		elif option == 9:
+		elif option == 7:
 			exit(0)
 
 	"""
-	Method that defines the menu on the actions to be carried
-	out in the main menu.
+	Method that launches an action based on the option chosen in the Snapshots menu.
+
+	Parameters:
+	self -- An instantiated object of the FormDialog class.
+	option -- Chosen option.
+	"""
+	def switchSmenu(self, option):
+		if option == 1:
+			self.createSnapshot()
+		elif option == 2:
+			self.deleteSnapshot()
+		elif option == 3:
+			self.restoreSnapshot()
+		elif option == 4:
+			self.mountSearchableSnapshot()
+
+	"""
+	Method that defines the menu of actions that can be performed in relation to snaphosts.
+
+	Parameters:
+	self -- An instantiated object of the FormDialog class.
+	"""
+	def snapshotMenu(self):
+		options_sm = [("1", "Create Snapshot"),
+					  ("2", "Delete Snapshot(s)"),
+					  ("3", "Restore snapshot"),
+					  ("4", "Mount searchable snapshot")]
+
+		option_sm = self.getMenu("Select a option:", options_sm, "Snapshots Menu")
+		self.switchSmenu(int(option_sm))
+
+	"""
+	Method that defines the menu on the actions to be carried out in the main menu.
 
 	Parameters:
 	self -- An instantiated object of the FormDialog class.
 	"""
 	def mainMenu(self):
 		options_mm = [("1", "Snap-Tool Configuration"),
-					  ("2", "Create repository"),
-					  ("3", "Create Snapshot"),
-					  ("4", "Delete Snapshot"),
-					  ("5", "Delete indexes"),
-					  ("6", "Create Searchable Snapshot"),
-					  ("7", "Nodes information"),
-					  ("8", "About"),
-					  ("9", "Exit")]
+					  ("2", "Repositories"),
+					  ("3", "Snapshots"),
+					  ("4", "Indices"),
+					  ("5", "Nodes information"),
+					  ("6", "About"),
+					  ("7", "Exit")]
 
 		option_mm = self.getMenu("Select a option:", options_mm, "Main Menu")
 		self.switchMmenu(int(option_mm))

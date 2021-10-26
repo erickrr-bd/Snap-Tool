@@ -8,8 +8,7 @@ from base64 import b64encode, b64decode
 from Crypto.Util.Padding import pad, unpad
 
 """
-Class that allows managing all the utilities that are used for
-the operation of the application.
+Class that allows managing all the utilities that are used for the operation of the application.
 """
 class Utils:
 	"""
@@ -23,7 +22,7 @@ class Utils:
 	logger = None
 
 	"""
-	Property that stores an object of type FormDialogs.
+	Property that stores an object of type FormDialog.
 	"""
 	form_dialog = None
 
@@ -32,6 +31,7 @@ class Utils:
 
 	Parameters:
 	self -- An instantiated object of the Utils class.
+	form_dialog -- FormDialog class object.
 	"""
 	def __init__(self, form_dialog):
 		self.logger = Logger()
@@ -48,8 +48,7 @@ class Utils:
 	mode -- Mode in which the YAML file will be opened.
 
 	Exceptions:
-	IOError -- It is an error raised when an input/output
-	           operation fails.
+	IOError -- It is an error raised when an input/output operation fails.
 	"""
 	def createYamlFile(self, data, path_file_yaml, mode):
 		try:
@@ -61,8 +60,7 @@ class Utils:
 			self.form_dialog.mainMenu()
 
 	"""
-	Method that obtains and stores the content of a YAML file
-	in a variable.
+	Method that obtains and stores the content of a YAML file in a variable.
 
 	Parameters:
 	self -- An instantiated object of the Utils class.
@@ -70,12 +68,10 @@ class Utils:
 	mode -- Mode in which the YAML file will be opened.
 
 	Return:
-	data_file_yaml -- Variable that stores the content of the
-					  YAML file.
+	data_file_yaml -- Variable that stores the content of the YAML file.
 
 	Exceptions:
-	IOError -- It is an error raised when an input/output
-	           operation fails.
+	IOError -- It is an error raised when an input/output operation fails.
 	"""
 	def readYamlFile(self, path_file_yaml, mode):
 		try:
@@ -89,27 +85,18 @@ class Utils:
 			return data_file_yaml
 
 	"""
-	Method that defines a directory based on the main Snap-Tool
-	directory.
+	Method that defines a directory based on the main Snap-Tool directory.
 
 	Parameters:
 	self -- An instantiated object of the Utils class.
-	path_dir -- Directory that is added to the main Snap-Tool 
-	            directory.
+	path_dir -- Directory that is added to the main Snap-Tool directory.
 
 	Return:
 	path_final -- Defined final path.
 
 	Exceptions:
-	OSError -- This exception is raised when a system function
-	           returns a system-related error, including I/O
-	           failures such as “file not found” or “disk full”
-	           (not for illegal argument types or other incidental
-	           errors).
-	TypeError -- Raised when an operation or function is applied
-				 to an object of inappropriate type. The associated
-				 value is a string giving details about the type 
-				 mismatch.
+	OSError -- This exception is raised when a system function returns a system-related error, including I/O failures such as “file not found” or “disk full” (not for illegal argument types or other incidental errors).
+	TypeError -- Raised when an operation or function is applied to an object of inappropriate type. The associate value is a string giving details about the type mismatch.
 	"""
 	def getPathSnapTool(self, path_dir):
 		path_main = "/etc/Snap-Tool"
@@ -123,8 +110,7 @@ class Utils:
 			return path_final
 
 	"""
-	Method that obtains the passphrase used for the process of
-	encrypting and decrypting a file.
+	Method that obtains the passphrase used for the process of encrypting and decrypting a file.
 
 	Parameters:
 	self -- An instantiated object of the Utils class.
@@ -133,9 +119,7 @@ class Utils:
 	pass_key -- Passphrase in a character string.
 
 	Exceptions:
-	FileNotFoundError -- This is an exception in python and it
-						 comes when a file does not exist
-						 and we want to use it. 
+	FileNotFoundError -- This is an exception in python and it comes when a file does not exist and we want to use it. 
 	"""
 	def getPassphrase(self):
 		try:
@@ -150,13 +134,11 @@ class Utils:
 			return pass_key
 
 	"""
-	Method that validates an entered value based on a defined
-	regular expression.
+	Method that validates an entered value based on a defined regular expression.
 
 	Parameters:
 	self -- An instantiated object of the Utils class.
-	regular_expression -- Regular expression with which the 
-						  data will be validated.
+	regular_expression -- Regular expression with which the data will be validated.
 	data_entered -- Data to be validated.
 
 	Return:
@@ -168,14 +150,12 @@ class Utils:
 		return True
 
 	"""
-	Method that converts a list into a list that can be
-	used for a checklist or radiolist in the application.
+	Method that converts a list into a list that can be used for a checklist or radiolist in the application.
 
 	Parameters:
 	self -- An instantiated object of the Utils class.
 	list_to_convert -- List to convert.
-	text -- Text that will be displayed next to the item in
-			the interface.
+	text -- Text that will be displayed next to the item in the interface.
 
 	Return:
 	new_list_convert -- Converted list.
@@ -207,15 +187,13 @@ class Utils:
 
 	Parameters:
 	self -- An instantiated object of the Utils class.
-	file -- Path of the file from which the hash function will
-	        be obtained.
+	file -- Path of the file from which the hash function will be obtained.
 
 	Return:
 	Hash of the file.
 
 	Exceptions:
-	IOError -- It is an error raised when an input/output
-	           operation fails.
+	IOError -- It is an error raised when an input/output operation fails.
 	"""
 	def getHashToFile(self, path_file):
 		try:
@@ -236,15 +214,12 @@ class Utils:
 	Parameters:
 	self -- An instantiated object of the Utils class.
 	text -- Text to encrypt.
-	form_dialog -- A FormDialogs class object.
 
 	Return:
 	Encrypted text.
 
 	Exceptions:
-	binascii.Error -- Is raised if were incorrectly padded or
-					  if there are non-alphabet characters
-					  present in the string. 
+	binascii.Error -- Is raised if were incorrectly padded or if there are non-alphabet characters present in the string. 
 	"""
 	def encryptAES(self, text):
 		try:
@@ -265,15 +240,12 @@ class Utils:
 	Parameters:
 	self -- An instantiated object of the Utils class.
 	text_encrypt -- Text to decipher.
-	form_dialog -- A FormDialogs class object.
 
 	Return:
 	Character string with decrypted text.
 
 	Exceptions:
-	binascii.Error -- Is raised if were incorrectly padded or
-					  if there are non-alphabet characters
-					  present in the string. 
+	binascii.Error -- Is raised if were incorrectly padded or if there are non-alphabet characters present in the string. 
 	"""
 	def decryptAES(self, text_encrypt):
 		try:

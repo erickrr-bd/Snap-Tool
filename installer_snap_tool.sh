@@ -3,7 +3,7 @@
 clear
 echo -e "\e[96m2021@Tekium. All rights reserved.\e[0m"
 echo ''
-echo -e '\e[96mInstaller for Snap-Tool v3.0\e[0m'
+echo -e '\e[96mInstaller for Snap-Tool v3.1\e[0m'
 echo ''
 echo -e '\e[96mAuthor: Erick Rodríguez erickrr.tbd93@gmail.com\e[0m'
 echo ''

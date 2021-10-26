@@ -6,8 +6,7 @@ from requests.exceptions import InvalidURL
 from elasticsearch import Elasticsearch, RequestsHttpConnection, exceptions	
 
 """
-Class that allows you to manage everything related to
-ElasticSearch.
+Class that allows you to manage everything related to ElasticSearch.
 """
 class Elastic:
 	"""
@@ -28,10 +27,13 @@ class Elastic:
 	logger = None
 
 	"""
-	Property that stores an object of type FormDialogs.
+	Property that stores an object of type FormDialog.
 	"""
 	form_dialog = None
 
+	"""
+	Property that stores the information defined in the Snap-Tool configuration file.
+	"""
 	snap_tool_conf = None
 
 	"""
@@ -39,6 +41,7 @@ class Elastic:
 
 	Parameters:
 	self -- An instantiated object of the Elastic class.
+	form_dialog -- FormDialog class object.
 	"""
 	def __init__(self, form_dialog):
 		self.logger = Logger()
@@ -53,22 +56,14 @@ class Elastic:
 	self -- An instantiated object of the Elastic class.
 
 	Return:
-	conn_es -- Object that contains the connection to
-			   ElasticSearch.
+	conn_es -- Object that contains the connection to ElasticSearch.
 
 	Exceptions:
-	KeyError -- A Python KeyError exception is what is
-				raised when you try to access a key that
-				isn’t in a dictionary (dict). 
-	exceptions.ConnectionError --  Error raised when there
-								   was an exception while
-								   talking to ES. 
-	exceptions.AuthenticationException -- Exception representing
-										  a 401 status code.
-	exceptions.AuthorizationException -- Exception representing
-										 a 403 status code.
-	requests.exceptions.InvalidURL -- The URL provided was
-									  somehow invalid.
+	KeyError -- A Python KeyError exception is what is raised when you try to access a key that isn’t in a dictionary (dict). 
+	exceptions.ConnectionError --  Error raised when there was an exception while talking to ES. 
+	exceptions.AuthenticationException -- Exception representing a 401 status code.
+	exceptions.AuthorizationException -- Exception representing a 403 status code.
+	requests.exceptions.InvalidURL -- The URL provided was somehow invalid.
 	"""
 	def getConnectionElastic(self):
 		conn_es = None
@@ -132,20 +127,14 @@ class Elastic:
 
 	Parameters:
 	self -- An instantiated object of the Elastic class.
-	conn_es -- Object that contains the connection to
-			   ElasticSearch.
-	repository_name -- Repository where the snapshot will
-					   be stored.
-	index_name -- Name of the index to be backed up in the
-				  snapshot.
+	conn_es -- Object that contains the connection to ElasticSearch.
+	repository_name -- Repository where the snapshot will be stored.
+	index_name -- Name of the index to be backed up in the snapshot.
 
 	Exceptions:
-	exceptions.RequestError -- Exception representing a 400
-							   status code. 
-	exceptions.NotFoundError -- Exception representing a 404
-								status code.
-	exceptions.AuthorizationException -- Exception representing
-	  									 a 403 status code.
+	exceptions.RequestError -- Exception representing a 400 status code. 
+	exceptions.NotFoundError -- Exception representing a 404 status code.
+	exceptions.AuthorizationException -- Exception representing a 403 status code.
 	"""
 	def createSnapshot(self, conn_es, repository_name, index_name):
 		try:
@@ -171,21 +160,16 @@ class Elastic:
 
 	Parameters:
 	self -- An instantiated object of the Elastic class.
-	conn_es -- Object that contains the connection to
-			   ElasticSearch.
-	repository_name -- Repository where the snapshot is
-					   stored.
-	snapshot_name -- Name of the snapshot from which the
-					 status will be obtained.
+	conn_es -- Object that contains the connection to ElasticSearch.
+	repository_name -- Repository where the snapshot is stored.
+	snapshot_name -- Name of the snapshot from which the status will be obtained.
 
 	Return:
 	status_snapshot -- Status of the snapshot.
 
 	Exceptions:
-	exceptions.NotFoundError -- Exception representing a
-								404 status code.
-	exceptions.AuthorizationException -- Exception representing
-	  									 a 403 status code.
+	exceptions.NotFoundError -- Exception representing a 404 status code.
+	exceptions.AuthorizationException -- Exception representing a 403 status code.
 	"""
 	def getStatusSnapshot(self, conn_es, repository_name, snapshot_name):
 		try:
@@ -199,7 +183,20 @@ class Elastic:
 			return status_snapshot
 
 	"""
+	Method that gets the status of a snapshot.
 
+	Parameters:
+	self -- An instantiated object of the Elastic class.
+	conn_es -- Object that contains the connection to ElasticSearch.
+	repository_name -- Repository where the snapshot is stored.
+	snapshot_name -- Name of the snapshot from which the information will be obtained.
+
+	Return:
+	snapshot_info -- Information obtained from the snapshot.
+
+	Exceptions:
+	exceptions.NotFoundError -- Exception representing a 404 status code.
+	exceptions.AuthorizationException -- Exception representing a 403 status code.
 	"""
 	def getSnapshotInfo(self, conn_es, repository_name, snapshot_name):
 		try:
@@ -212,24 +209,18 @@ class Elastic:
 			return snapshot_info
 
 	"""
-	Method that gets a list of all the snapshots created so
-	far.
+	Method that gets a list of all the snapshots created so far.
 
 	Parameters:
-	conn_es -- Object that contains the connection to
-			   ElasticSearch.
-	repository_name -- Repository where the snapshots are
-					   stored.
+	conn_es -- Object that contains the connection to ElasticSearch.
+	repository_name -- Repository where the snapshots are stored.
 
 	Return:
-	list_all_snapshots -- List with the names of all snapshots
-						  found in the repository.
+	list_all_snapshots -- List with the names of all snapshots found in the repository.
 
 	Exceptions:
-	exceptions.NotFoundError -- Exception representing a
-								404 status code.
-	exceptions.AuthorizationException -- Exception representing
-	  									 a 403 status code.
+	exceptions.NotFoundError -- Exception representing a 404 status code.
+	exceptions.AuthorizationException -- Exception representing a 403 status code.
 	"""
 	def getAllSnapshots(self, conn_es, repository_name):
 		list_all_snapshots = []
@@ -246,20 +237,36 @@ class Elastic:
 			return list_all_snapshots
 
 	"""
+	Method that restores a snapshot.
+
+	Parameters:
+	conn_es -- Object that contains the connection to ElasticSearch.
+	repository_name -- Repository where the snapshot is stored.
+	snapshot_name -- Name of the snapshot to restore.
+
+	Exceptions:
+	exceptions.NotFoundError -- Exception representing a 404 status code.
+	exceptions.AuthorizationException -- Exception representing a 403 status code.
+	"""
+	def restoreSnapshot(self, conn_es, repository_name, snapshot_name):
+		try:
+			conn_es.snapshot.restore(repository = repository_name, snapshot = snapshot_name)
+		except (exceptions.NotFoundError, exceptions.AuthorizationException) as exception:
+			self.logger.createSnapToolLog(exception, 3)
+			self.form_dialog.d.msgbox("\nFailed to restore snapshot. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.form_dialog.mainMenu()
+
+	"""
 	Method that removes a snapshot.
 
 	Parameters:
-	conn_es -- Object that contains the connection to
-			   ElasticSearch.
-	repository_name -- Name of the repository where the snapshot
-					   to delete is stored.
+	conn_es -- Object that contains the connection to ElasticSearch.
+	repository_name -- Name of the repository where the snapshot to delete is stored.
 	snapshot_name -- Name of the snapshot to delete.
 
 	Exceptions:
-	exceptions.NotFoundError -- Exception representing a
-								404 status code.
-	exceptions.AuthorizationException -- Exception representing
-	  									 a 403 status code.
+	exceptions.NotFoundError -- Exception representing a 404 status code.
+	exceptions.AuthorizationException -- Exception representing a 403 status code.
 	"""
 	def deleteSnapshotElastic(self, conn_es, repository_name, snapshot_name):
 		try:
@@ -270,47 +277,37 @@ class Elastic:
 			self.form_dialog.mainMenu()
 
 	"""
-	Method that mounts a snapshot created as a searchable snapshot.
+	Method that mounts a snapshot as a searchable snapshot.
 
 	Parameters:
-	self -- An instantiated object of the Elastic class.
 	conn_es -- Object that contains the connection to ElasticSearch.
-	repository_name -- Name of the repository where the snapshot to mount is located.
-	snapshot_name -- Name of the snapshot to mount.
-	form_dialog -- A FormDialogs class object.
+	repository_name -- Name of the repository where the snapshot that will be mounted as a searchable snapshot is stored.
+	snapshot_name -- Name of the snapshot to be mounted as a searchable snapshot.
 
 	Exceptions:
 	exceptions.NotFoundError -- Exception representing a 404 status code.
 	exceptions.AuthorizationException -- Exception representing a 403 status code.
 	"""
-	def mountSearchableSnapshots(self, conn_es, repository_name, snapshot_name, form_dialog):
+	def mountSearchableSnapshot(self, conn_es, repository_name, snapshot_name):
 		try:
-			conn_es.searchable_snapshots.mount(repository = repository_name, snapshot = snapshot_name, body = { "index" : snapshot_name }, wait_for_completion = True, request_timeout = 7200)
-		except exceptions.NotFoundError as exception:
-			self.logger.createLogTool(str(exception), 4)
-			form_dialog.d.msgbox("\nFailed to mount snapshot as a searchable snapshot. For more information, see the logs.", 7, 50, title = "Error message")
-			form_dialog.mainMenu()
-		except exceptions.AuthorizationException as exception:
-			self.logger.createLogTool(str(exception), 4)
-			form_dialog.d.msgbox("\nFailed to mount snapshot as a searchable snapshot. For more information, see the logs.", 7, 50, title = "Error message")
-			form_dialog.mainMenu()
+			conn_es.searchable_snapshots.mount(repository = repository_name, snapshot = snapshot_name, body = { "index" : snapshot_name }, wait_for_completion = False, request_timeout = 7200)
+		except (exceptions.NotFoundError, exceptions.AuthorizationException) as exception:
+			self.logger.createSnapToolLog(exception, 3)
+			self.form_dialog.d.msgbox("\nFailed to mount snapshot as a searchable snapshot. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.form_dialog.mainMenu()
 
 	"""
-	Method that obtains a list with the names of the
-	ElasticSearch indexes.
+	Method that obtains a list with the names of the ElasticSearch indexes.
 
 	Parameters:
 	self -- An instantiated object of the Elastic class.
-	conn_es -- Object that contains the connection to
-			   ElasticSearch.
+	conn_es -- Object that contains the connection to ElasticSearch.
 
 	Return:
-	list_all_indices -- List with the names of the indices
-						found.
+	list_all_indices -- List with the names of the indices found.
 
 	Exceptions:
-	exceptions.AuthorizationException -- Exception representing
-	  									 a 403 status code.
+	exceptions.AuthorizationException -- Exception representing a 403 status code.
 	"""
 	def getIndices(self, conn_es):
 		list_all_indices = []
@@ -325,21 +322,17 @@ class Elastic:
 			return list_all_indices
 
 	"""
-	Method that gets the repositories created in
-	ElasticSearch.
+	Method that gets the repositories created in ElasticSearch.
 
 	Parameters:
 	self -- An instantiated object of the Elastic class.
-	conn_es -- Object that contains the connection to
-			   ElasticSearch.
+	conn_es -- Object that contains the connection to ElasticSearch.
 
 	Return:
-	list_all_repositories -- List with the names of the
-							 repositories found.
+	list_all_repositories -- List with the names of the repositories found.
 
 	Exceptions:
-	exceptions.AuthorizationException -- Exception representing
-	  									 a 403 status code.
+	exceptions.AuthorizationException -- Exception representing a 403 status code.
 	"""
 	def getAllRepositories(self, conn_es):
 		list_all_repositories = []
@@ -355,18 +348,14 @@ class Elastic:
 			return list_all_repositories
 
 	"""
-	Method that obtains information related to the disk
-	space corresponding to the nodes belonging to the
-	elasticsearch cluster.
+	Method that obtains information related to the disk space corresponding to the nodes belonging to the elasticsearch cluster.
 
 	Parameters:
 	self -- An instantiated object of the Elastic class.
-	conn_es -- Object that contains the connection to
-			   ElasticSearch.
+	conn_es -- Object that contains the connection to ElasticSearch.
 
 	Exceptions:
-	exceptions.AuthorizationException -- Exception representing
-	  									 a 403 status code.
+	exceptions.AuthorizationException -- Exception representing a 403 status code.
 	"""
 	def getNodesInformation(self, conn_es):
 		try:
@@ -383,15 +372,12 @@ class Elastic:
 
 	Parameters:
 	self -- An instantiated object of the Elastic class.
-	conn_es -- Object that contains the connection to
-			   ElasticSearch.
+	conn_es -- Object that contains the connection to ElasticSearch.
 	index_name -- Name of the index to be removed.
 
 	Exceptions:
-	exceptions.NotFoundError -- Exception representing a
-								404 status code.
-	exceptions.AuthorizationException -- Exception representing
-	  									 a 403 status code.
+	exceptions.NotFoundError -- Exception representing a 404 status code.
+	exceptions.AuthorizationException -- Exception representing a 403 status code.
 	"""
 	def deleteIndex(self, conn_es, index_name):
 		try:
