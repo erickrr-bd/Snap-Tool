@@ -307,6 +307,31 @@ class FormDialog:
 						return tag_fselect
 			elif code_fselect == self.d.CANCEL:
 				self.mainMenu()
+
+	"""
+	Method that generates an interface to select a directory.
+
+	Parameters:
+	self -- An instantiated object of the FormDialog class.
+	initial_path -- Initial path in the interface.
+	title -- Title displayed on the interface.
+
+	Return:
+	tag_dselect -- Selected directory.
+	"""
+	def getDirectory(self, initial_path, title):
+		while True:
+			code_dselect, tag_dselect = self.d.dselect(filepath = initial_path,
+													   height = 8,
+													   width = 50,
+													   title = title)
+			if code_dselect == self.d.OK:
+				if tag_dselect == "":
+					self.d.msgbox("\nSelect a directory. Required value (not empty).", 7, 50, title = "Error Message")
+				else:
+					return tag_dselect
+			elif code_dselect == self.d.CANCEL:
+				self.mainMenu()
 				
 	"""
 	Method that generates an interface with scroll box.
@@ -321,8 +346,6 @@ class FormDialog:
 										  height = 15,
 										  width = 70,
 										  title = title)
-		if code_scrollbox == self.d.OK:
-			self.mainMenu()
 
 	"""
 	Method that defines the action to be performed on the Snap-Tool configuration file (creation or modification).
@@ -346,8 +369,79 @@ class FormDialog:
 			if opt_conf_true == "Modify":
 				configuration.updateConfiguration()
 
+	"""
+	Method that creates a repository of type FS in ElasticSearch.
+
+	Parameters:
+	self -- An instantiated object of the FormDialog class.
+
+	Exceptions:
+	KeyError -- A Python KeyError exception is what is raised when you try to access a key that isn’t in a dictionary (dict).
+	"""
 	def createRepository(self):
-		print("Hola")
+		try:
+			if not path.exists(self.path_conf_file):
+				self.d.msgbox("\nConfiguration file not found.", 7, 50, title = "Error Message")
+			else:
+				repository_name = self.getDataInputText("Enter the name to be assigned to the repository:", "repository_name")
+				path_repository = self.getDirectory("/etc/Snap-Tool", "Repository path")
+				compress_repository = self.getDataYesOrNo("\nDo you require metadata files to be stored compressed?", "Repository compression")
+				if compress_repository == "ok":
+					compress_repository = True
+				else:
+					compress_repository = False
+				snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
+				conn_es = self.elastic.getConnectionElastic()
+				self.elastic.createRepositoryFS(conn_es, repository_name, path_repository, compress_repository)
+				message_create_repository = self.telegram.getMessageCreateRepository(repository_name, path_repository, compress_repository)
+				self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_create_repository)
+				self.logger.createSnapToolLog("Repository created: " + repository_name, 1)
+				self.d.msgbox("\nRepository created: " + repository_name, 7, 50, title = "Notification Message")
+				conn_es.transport.close()
+			self.mainMenu()
+		except KeyError as exception:
+			self.logger.createSnapToolLog(exception, 3)
+			self.d.msgbox("\nFailed to create snapshot. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.mainMenu()
+
+	"""
+	Method that removes one or more FS type repositories in ElasticSearch.
+
+	Parameters:
+	self -- An instantiated object of the FormDialog class.
+
+	Exceptions:
+	KeyError -- A Python KeyError exception is what is raised when you try to access a key that isn’t in a dictionary (dict).
+	"""
+	def deleteRepository(self):
+		try:
+			if not path.exists(self.path_conf_file):
+				self.d.msgbox("\nConfiguration file not found.", 7, 50, title = "Error Message")
+			else:
+				snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
+				conn_es = self.elastic.getConnectionElastic()
+				list_aux_repositories = self.elastic.getAllRepositories(conn_es)
+				if len(list_aux_repositories) == 0:
+					self.d.msgbox("\nThere are no repositories created.", 7, 50, title = "Notification Message")
+				else:
+					list_all_repositories = self.utils.convertListToCheckOrRadioList(list_aux_repositories, "Repository Name")
+					opt_repos = self.getDataCheckList("Select a option:", list_all_repositories, "Repositories")
+					confirm_delete_repos = self.getDataYesOrNo("\nAre you sure to delete the following repository(s)?", "Delete repositories")
+					if confirm_delete_repos == "ok":
+						message_to_display = "\nDeleted repositories:\n\n"
+						for repo_name in opt_repos:
+							self.elastic.deleteRepositoryFS(conn_es, repo_name)
+							message_to_display += "\n- " + repo_name  
+							message_delete_repository = self.telegram.getMessageDeleteRepository(repo_name)
+							self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_delete_repository)
+							self.logger.createSnapToolLog("Deleted repository: " + repo_name, 2)
+						self.getScrollBox(message_to_display, "Deleted repositories")
+				conn_es.transport.close()
+			self.mainMenu()
+		except KeyError as exception:
+			self.logger.createSnapToolLog("Key Error: " + exception, 3)
+			self.d.msgbox("\nFailed to delete repository. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.mainMenu()
 
 	"""
 	Method that creates a snapshot of a particular index and allows the index to be deleted or not.
@@ -532,6 +626,45 @@ class FormDialog:
 			self.mainMenu()
 
 	"""
+	Method that removes one or more indexes in ElasticSearch.
+
+	Parameters:
+	self -- An instantiated object of the FormDialog class.
+
+	Exceptions:
+	KeyError -- A Python KeyError exception is what is raised when you try to access a key that isn’t in a dictionary (dict).
+	"""
+	def deleteIndices(self):
+		try:
+			if not path.exists(self.path_conf_file):
+				self.d.msgbox("\nConfiguration file not found.", 7, 50, title = "Error Message")
+			else:
+				conn_es = self.elastic.getConnectionElastic()
+				list_aux_indices = self.elastic.getIndices(conn_es)
+				if len(list_aux_indices) == 0:
+					self.d.msgbox(text = "\nThere are no indexes to remove.", height = 7, width = 50, title = "Notification Message")
+				else:
+					list_all_indices = self.utils.convertListToCheckOrRadioList(list_aux_indices, "Index name")
+					opt_indices = self.getDataCheckList("Select a option:", list_all_indices, "Indices")
+					confirm_delete_indices = self.getDataYesOrNo("\nAre you sure to delete the selected indices?", "Delete indices")
+					if confirm_delete_indices == "ok":
+						snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
+						message_to_display = "\nIndices removed:\n"
+						for index_name in opt_indices:
+							self.elastic.deleteIndex(conn_es, index_name)
+							message_to_display += "\n- " + index_name
+							self.logger.createSnapToolLog("Index removed: " + index_name, 2)
+							message_delete_indices = self.telegram.getMessageDeleteIndex(index_name)
+							self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_delete_indices)
+						self.getScrollBox(message_to_display, "Indices Removed")
+				conn_es.transport.close()
+			self.mainMenu()
+		except KeyError as exception:
+			self.logger.createSnapToolLog("Key Error: " + exception, 3)
+			self.d.msgbox("\nFailed to delete indices. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.mainMenu()
+
+	"""
 	Method that displays information related to the percentage of occupied disk space of the nodes of the elasticsearch cluster.
 
 	Parameters:
@@ -549,6 +682,7 @@ class FormDialog:
 				message += "Percent occupied on disk: " + str(round(percentage, 2)) + "%\n\n"
 		conn_es.transport.close()
 		self.getScrollBox(message, "Node Information")
+		self.mainMenu()
 
 	"""
 	Method that displays a message on the screen with information about the application.
@@ -559,6 +693,7 @@ class FormDialog:
 	def getAbout(self):
 		message = "\nCopyright@2021 Tekium. All rights reserved.\nSnap-Tool v3.1\nAuthor: Erick Rodriguez\nEmail: erodriguez@tekium.mx, erickrr.tbd93@gmail.com\n" + "License: GPLv3\n\nSnap-Tool is a tool that allows the management of snaphots in\nElasticSearch through a graphical interface."
 		self.getScrollBox(message, "About")
+		self.mainMenu()
 
 	"""
 	Method that launches an action based on the option chosen in the main menu.
@@ -571,17 +706,12 @@ class FormDialog:
 		if option == 1:
 			self.defineConfiguration()
 		elif option == 2:
-			self.createRepository()
+			self.repositoryMenu()
 		elif option == 3:
 			self.snapshotMenu()
 		elif option == 4:
-			self.deleteSnapshot()
-		"""
-		if option == 4:
-			self.getCreateSearchSnapshot()
-		if option == 5:
-			self.getAbout()"""
-		if option == 5:
+			self.indicesMenu()
+		elif option == 5:
 			self.showNodesDiskSpace()
 		elif option == 6:
 			self.getAbout()
@@ -606,6 +736,30 @@ class FormDialog:
 			self.mountSearchableSnapshot()
 
 	"""
+	Method that launches an action based on the option chosen in the Repositories menu.
+
+	Parameters:
+	self -- An instantiated object of the FormDialog class.
+	option -- Chosen option.
+	"""
+	def switchRmenu(self, option):
+		if option == 1:
+			self.createRepository()
+		elif option == 2:
+			self.deleteSnapshot()
+
+	"""
+	Method that launches an action based on the option chosen in the Indices menu.
+
+	Parameters:
+	self -- An instantiated object of the FormDialog class.
+	option -- Chosen option.
+	"""
+	def switchImenu(self, option):
+		if option == 1:
+			self.deleteIndices()
+
+	"""
 	Method that defines the menu of actions that can be performed in relation to snaphosts.
 
 	Parameters:
@@ -619,6 +773,31 @@ class FormDialog:
 
 		option_sm = self.getMenu("Select a option:", options_sm, "Snapshots Menu")
 		self.switchSmenu(int(option_sm))
+
+	"""
+	Method that defines the menu of actions that can be performed in relation to repositories.
+
+	Parameters:
+	self -- An instantiated object of the FormDialog class.
+	"""
+	def repositoryMenu(self):
+		options_rm = [("1", "Create repository"),
+					  ("2", "Delete repositories")]
+
+		option_rm = self.getMenu("Select a option:", options_rm, "Repositories menu")
+		self.switchRmenu(int(option_rm))
+
+	"""
+	Method that defines the menu of actions that can be performed in relation to indices.
+
+	Parameters:
+	self -- An instantiated object of the FormDialog class.
+	"""
+	def indicesMenu(self):
+		options_im = [("1", "Delete indices")]
+
+		option_im = self.getMenu("Select a option:", options_im, "Indices Menu")
+		self.switchImenu(int(option_im))
 
 	"""
 	Method that defines the menu on the actions to be carried out in the main menu.

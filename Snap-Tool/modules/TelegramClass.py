@@ -67,6 +67,42 @@ class Telegram:
 		return header
 
 	"""
+	Method that generates the message in Telegram for when a repository is created.
+
+	Parameters:
+	self -- An instantiated object of the Telegram class.
+	repository_name -- Name of the repository created.
+	path_repository -- Path of the repository created.
+	compress_repository -- Whether the repository will have compression or not.
+
+	Return:
+	message -- Message to send.
+	"""
+	def getMessageCreateRepository(self, repository_name, path_repository, compress_repository):
+		message = self.getHeaderMessage()
+		message += u'\u2611\uFE0F' + " Action: Repository created\n"
+		message += u'\u2611\uFE0F' + " Repository name: " + repository_name + '\n'
+		message += u'\u2611\uFE0F' + " Repository path: " + path_repository + '\n'
+		message += u'\u2611\uFE0F' + " Repository compression: " + compress_repository
+		return message
+
+	"""
+	Method that generates the message in Telegram for when a repository is deleted.
+
+	Parameters:
+	self -- An instantiated object of the Telegram class.
+	repository_name -- Deleted repository name.
+
+	Return:
+	message -- Message to send.
+	"""
+	def getMessageDeleteRepository(self, repository_name):
+		message = self.getHeaderMessage()
+		message += u'\u2611\uFE0F' + " Action: Repository deleted\n"
+		message += u'\u2611\uFE0F' + " Repository name: " + repository_name
+		return message
+
+	"""
 	Method that generates the message in Telegram for when a snapshot is deleted.
 
 	Parameters:

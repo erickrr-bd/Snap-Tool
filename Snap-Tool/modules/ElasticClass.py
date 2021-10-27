@@ -145,14 +145,47 @@ class Elastic:
 			self.form_dialog.mainMenu()
 
 	"""
+	Method that creates a repository type FS.
+
+	Parameters:
+	self -- An instantiated object of the Elastic class.
+	conn_es -- Object that contains the connection to ElasticSearch.
+	repository_name -- Name of the repository.
+	path_repository -- Repository path.
+	compress_repository -- Whether the metadata files are stored compressed.
+
+	Exceptions:
+	exceptions.AuthorizationException -- Exception representing a 403 status code.
+	exceptions.ConnectionError --  Error raised when there was an exception while talking to ES.
+	exceptions.TransportError -- Exception raised when ES returns a non-OK (>=400) HTTP status code. Or when an actual connection error happens; in that case the status_code will be set to 'N/A'.
+	"""
+	def createRepositoryFS(self, conn_es, repository_name, path_repository, compress_repository):
+		try:
+			conn_es.snapshot.create_repository(repository = repository_name,
+											   body = { "type": "fs", "settings": { "location": path_repository, "compress" : compress_repository }})
+		except (exceptions.AuthorizationException, exceptions.ConnectionError, exceptions.TransportError) as exception:
+			self.logger.createSnapToolLog(exception, 3)
+			self.form_dialog.d.msgbox("\nError creating repository. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.form_dialog.mainMenu()
 
 	"""
-	def createRepositoryElastic(self, conn_es, repository_name, path_repository):
+	Method that removes a repository type FS.
+
+	Parameters:
+	self -- An instantiated object of the Elastic class.
+	conn_es -- Object that contains the connection to ElasticSearch.
+	repository_name -- Name of the repository to delete.
+
+	Exceptions:
+	exceptions.NotFoundError -- Exception representing a 404 status code.
+	exceptions.AuthorizationException -- Exception representing a 403 status code.
+	"""
+	def deleteRepositoryFS(self, conn_es, repository_name):
 		try:
-			conn_es.snapshot.create_repository(repository = repository_name, body = { "type" : "fs", "settings" : { "location" : path_repository }})
-		except exceptions.AuthorizationException as exception:
+			conn_es.snapshot.delete_repository(repository = repository_name)
+		except (exceptions.NotFoundError, exceptions.AuthorizationException) as exception:
 			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nFailed to get created repositories. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.form_dialog.d.msgbox("\nFailed to delete repository. For more information, see the logs.", 8, 50, title = "Error Message")
 			self.form_dialog.mainMenu()
 
 	"""
@@ -378,11 +411,12 @@ class Elastic:
 	Exceptions:
 	exceptions.NotFoundError -- Exception representing a 404 status code.
 	exceptions.AuthorizationException -- Exception representing a 403 status code.
+	exceptions.ConnectionError --  Error raised when there was an exception while talking to ES.
 	"""
 	def deleteIndex(self, conn_es, index_name):
 		try:
 			conn_es.indices.delete(index = index_name)
-		except (exceptions.NotFoundError, exceptions.AuthorizationException) as exception:
+		except (exceptions.NotFoundError, exceptions.AuthorizationException, exceptions.ConnectionError) as exception:
 			self.logger.createSnapToolLog(exception, 3)
 			self.form_dialog.d.msgbox("\nFailed to delete index. For more information, see the logs.", 8, 50, title = "Error Message")
 			self.form_dialog.mainMenu()
