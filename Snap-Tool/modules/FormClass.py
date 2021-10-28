@@ -100,7 +100,7 @@ class FormDialog:
 											  			  init = initial_value)
 			if code_inputbox == self.d.OK:
 				if(not self.utils.validateRegularExpression(decimal_reg_exp, tag_inputbox)):
-					self.d.msgbox("\nInvalid data entered. Required value (decimal or float).", 8, 50, title = "Error Message")
+					self.d.msgbox(text = "\nInvalid data entered. Required value (decimal or float).", height = 8, width = 50, title = "Error Message")
 				else:
 					return tag_inputbox
 			elif code_inputbox == self.d.CANCEL:
@@ -126,7 +126,7 @@ class FormDialog:
 														  init = initial_value)
 			if code_inputbox == self.d.OK:
 				if(not self.utils.validateRegularExpression(ip_reg_exp, tag_inputbox)):
-					self.d.msgbox("\nInvalid data entered. Required value (IP address).", 8, 50, title = "Error Message")
+					self.d.msgbox(text = "\nInvalid data entered. Required value (IP address).", height = 8, width = 50, title = "Error Message")
 				else:
 					return tag_inputbox
 			elif code_inputbox == self.d.CANCEL:
@@ -152,7 +152,7 @@ class FormDialog:
 														  init = initial_value)
 			if code_inputbox == self.d.OK:
 				if(not self.utils.validateRegularExpression(port_reg_exp, tag_inputbox)):
-					self.d.msgbox("\nInvalid data entered. Required value (0 - 65535).", 8, 50, title = "Error Message")
+					self.d.msgbox(text = "\nInvalid data entered. Required value (0 - 65535).", height = 8, width = 50, title = "Error Message")
 				else:
 					return tag_inputbox
 			elif code_inputbox == self.d.CANCEL:
@@ -177,7 +177,7 @@ class FormDialog:
 														  init = initial_value)
 			if code_inputbox == self.d.OK:
 				if tag_inputbox == "":
-					self.d.msgbox("\nInvalid data entered. Required value (not empty).", 8, 50, title = "Error Message")
+					self.d.msgbox(text = "\nInvalid data entered. Required value (not empty).", height = 8, width = 50, title = "Error Message")
 				else:
 					return tag_inputbox
 			elif code_inputbox == self.d.CANCEL:
@@ -203,7 +203,7 @@ class FormDialog:
 																   insecure = True)
 			if code_passwordbox == self.d.OK:
 				if tag_passwordbox == "":
-					self.d.msgbox("\nInvalid data entered. Required value (not empty).", 8, 50, title = "Error Message")
+					self.d.msgbox(text = "\nInvalid data entered. Required value (not empty).", height = 8, width = 50, title = "Error Message")
 				else:
 					return tag_passwordbox
 			elif code_passwordbox == self.d.CANCEL:
@@ -247,7 +247,7 @@ class FormDialog:
 					  										 title = title)
 			if code_radiolist == self.d.OK:
 				if len(tag_radiolist) == 0:
-					self.d.msgbox("\nSelect at least one option.", 7, 50, title = "Error Message")
+					self.d.msgbox(text = "\nSelect at least one option.", height = 7, width = 50, title = "Error Message")
 				else:
 					return tag_radiolist
 			elif code_radiolist == self.d.CANCEL:
@@ -273,7 +273,7 @@ class FormDialog:
 					 										 title = title)
 			if code_checklist == self.d.OK:
 				if len(tag_checklist) == 0:
-					self.d.msgbox("\nSelect at least one option.", 7, 50, title = "Error Message")
+					self.d.msgbox(text = "\nSelect at least one option.", height = 7, width = 50, title = "Error Message")
 				else:
 					return tag_checklist
 			elif code_checklist == self.d.CANCEL:
@@ -286,11 +286,12 @@ class FormDialog:
 	self -- An instantiated object of the FormDialogs class.
 	initial_path -- Initial path in the interface.
 	title -- Title displayed on the interface.
+	extension_file -- Allowed file extension.
 
 	Return:
 	tag_fselect -- Path of the selected file.
 	"""
-	def getFile(self, initial_path, title):
+	def getFile(self, initial_path, title, extension_file):
 		while True:
 			code_fselect, tag_fselect = self.d.fselect(filepath = initial_path,
 													   height = 8,
@@ -298,11 +299,11 @@ class FormDialog:
 													   title = title)
 			if code_fselect == self.d.OK:
 				if tag_fselect == "":
-					self.d.msgbox("\nSelect a file. Required value (PEM file).", 7, 50, title = "Error Message")
+					self.d.msgbox(text = "\nSelect a file. Required value: " + extension_file + " file.", height = 7, width = 50, title = "Error Message")
 				else:
 					ext_file = Path(tag_fselect).suffix
-					if not ext_file == ".pem":
-						self.d.msgbox("\nSelect a file. Required value (PEM file).", 7, 50, title = "Error Message")
+					if not ext_file == extension_file:
+						self.d.msgbox(text = "\nSelect a file. Required value: " + extension_file + " file.", height = 7, width = 50, title = "Error Message")
 					else:
 						return tag_fselect
 			elif code_fselect == self.d.CANCEL:
@@ -327,7 +328,7 @@ class FormDialog:
 													   title = title)
 			if code_dselect == self.d.OK:
 				if tag_dselect == "":
-					self.d.msgbox("\nSelect a directory. Required value (not empty).", 7, 50, title = "Error Message")
+					self.d.msgbox(text = "\nSelect a directory. Required value (not empty).", height = 7, width = 50, title = "Error Message")
 				else:
 					return tag_dselect
 			elif code_dselect == self.d.CANCEL:
@@ -381,7 +382,7 @@ class FormDialog:
 	def createRepository(self):
 		try:
 			if not path.exists(self.path_conf_file):
-				self.d.msgbox("\nConfiguration file not found.", 7, 50, title = "Error Message")
+				self.d.msgbox(text = "\nConfiguration file not found.", height = 7, width = 50, title = "Error Message")
 			else:
 				repository_name = self.getDataInputText("Enter the name to be assigned to the repository:", "repository_name")
 				path_repository = self.getDirectory("/etc/Snap-Tool", "Repository path")
@@ -396,12 +397,12 @@ class FormDialog:
 				message_create_repository = self.telegram.getMessageCreateRepository(repository_name, path_repository, compress_repository)
 				self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_create_repository)
 				self.logger.createSnapToolLog("Repository created: " + repository_name, 1)
-				self.d.msgbox("\nRepository created: " + repository_name, 7, 50, title = "Notification Message")
+				self.d.msgbox(text = "\nRepository created: " + repository_name, height = 7, width = 50, title = "Notification Message")
 				conn_es.transport.close()
 			self.mainMenu()
 		except KeyError as exception:
-			self.logger.createSnapToolLog(exception, 3)
-			self.d.msgbox("\nFailed to create snapshot. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.logger.createSnapToolLog("Key Error: " + exception, 3)
+			self.d.msgbox(text = "\nFailed to create snapshot. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.mainMenu()
 
 	"""
@@ -416,14 +417,14 @@ class FormDialog:
 	def deleteRepository(self):
 		try:
 			if not path.exists(self.path_conf_file):
-				self.d.msgbox("\nConfiguration file not found.", 7, 50, title = "Error Message")
+				self.d.msgbox(text = "\nConfiguration file not found.", height = 7, width = 50, title = "Error Message")
 			else:
-				snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
 				conn_es = self.elastic.getConnectionElastic()
 				list_aux_repositories = self.elastic.getAllRepositories(conn_es)
 				if len(list_aux_repositories) == 0:
-					self.d.msgbox("\nThere are no repositories created.", 7, 50, title = "Notification Message")
+					self.d.msgbox(text = "\nThere are no repositories created.", height = 7, width = 50, title = "Notification Message")
 				else:
+					snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
 					list_all_repositories = self.utils.convertListToCheckOrRadioList(list_aux_repositories, "Repository Name")
 					opt_repos = self.getDataCheckList("Select a option:", list_all_repositories, "Repositories")
 					confirm_delete_repos = self.getDataYesOrNo("\nAre you sure to delete the following repository(s)?", "Delete repositories")
@@ -440,7 +441,7 @@ class FormDialog:
 			self.mainMenu()
 		except KeyError as exception:
 			self.logger.createSnapToolLog("Key Error: " + exception, 3)
-			self.d.msgbox("\nFailed to delete repository. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.d.msgbox(text = "\nFailed to delete repository. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.mainMenu()
 
 	"""
@@ -455,51 +456,57 @@ class FormDialog:
 	def createSnapshot(self):
 		try:
 			if not path.exists(self.path_conf_file):
-				self.d.msgbox("\nConfiguration file not found.", 7, 50, title = "Error Message")
+				self.d.msgbox(text = "\nConfiguration file not found.", height = 7, width = 50, title = "Error Message")
 			else:
-				snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
 				conn_es = self.elastic.getConnectionElastic()
 				list_aux_indices = self.elastic.getIndices(conn_es)
-				list_all_indices = self.utils.convertListToCheckOrRadioList(list_aux_indices, "Index name")
-				opt_index = self.getDataRadioList("Select a option:", list_all_indices, "Indices")
-				list_aux_repositories = self.elastic.getAllRepositories(conn_es)
-				list_all_repositories = self.utils.convertListToCheckOrRadioList(list_aux_repositories, "Repository name")
-				opt_repo = self.getDataRadioList("Select a option:", list_all_repositories, "Repositories")
-				self.elastic.createSnapshot(conn_es, opt_repo, opt_index)
-				message_creation_start = self.telegram.getMessageStartCreationSnapshot(opt_index, opt_repo)
-				self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_creation_start)
-				self.logger.createSnapToolLog("Snapshot creation has started: " + opt_index, 1)
-				while True:
-					status_snapshot = self.elastic.getStatusSnapshot(conn_es, opt_repo, opt_index)
-					if status_snapshot == "SUCCESS":
-						break
-					sleep(60)
-				snapshot_info = self.elastic.getSnapshotInfo(conn_es, opt_repo, opt_index)
-				self.logger.createSnapToolLog("Snapshot creation has finished: " + opt_index, 1)
-				message_creation_end = self.telegram.getMessageEndSnapshot(opt_index, opt_repo, snapshot_info['snapshots'][0]['start_time'], snapshot_info['snapshots'][0]['end_time'])
-				self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_creation_end)
-				self.d.msgbox("\nSnapshot created: " + opt_index, 7, 50, title = "Notification Message")
-				if snap_tool_conf['is_delete_index'] == True:
-					self.elastic.deleteIndex(conn_es, opt_index)
-					if not conn_es.indices.exists(opt_index):
-						self.logger.createSnapToolLog("Index removed: " + opt_index, 1)
-						message_delete_index = self.telegram.getMessageDeleteIndex(opt_index)
-						self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_delete_index)
-						self.d.msgbox("\nIndex removed: " + opt_index, 7, 50, title = "Notification Message")
+				if len(list_aux_indices) == 0:
+					self.d.msgbox(text = "\nThere are no indexes to back up.", height = 7, width = 50, title = "Notification Message")
 				else:
-					delete_index = self.getDataYesOrNo("\nDo you want to delete the index?\n\n- " + opt_index, "Delete Index")
-					if delete_index == "ok":
-						self.elastic.deleteIndex(conn_es, opt_index)
-						if not conn_es.indices.exists(opt_index):
-							self.logger.createSnapToolLog("Index removed: " + opt_index, 1)
-							message_delete_index = self.telegram.getMessageDeleteIndex(opt_index)
-							self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_delete_index)
-							self.d.msgbox("\nIndex removed: " + opt_index, 7, 50, title = "Notification Message")
+					list_all_indices = self.utils.convertListToCheckOrRadioList(list_aux_indices, "Index name")
+					opt_index = self.getDataRadioList("Select a option:", list_all_indices, "Indices")
+					list_aux_repositories = self.elastic.getAllRepositories(conn_es)
+					if len(list_aux_repositories) == 0:
+						self.d.msgbox(text = "\nThere are no repositories.", height = 7, width = 50, title = "Notification Message")
+					else:
+						snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
+						list_all_repositories = self.utils.convertListToCheckOrRadioList(list_aux_repositories, "Repository name")
+						opt_repo = self.getDataRadioList("Select a option:", list_all_repositories, "Repositories")
+						self.elastic.createSnapshot(conn_es, opt_repo, opt_index)
+						message_creation_start = self.telegram.getMessageStartCreationSnapshot(opt_index, opt_repo)
+						self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_creation_start)
+						self.logger.createSnapToolLog("Snapshot creation has started: " + opt_index, 1)
+						while True:
+							status_snapshot = self.elastic.getStatusSnapshot(conn_es, opt_repo, opt_index)
+							if status_snapshot == "SUCCESS":
+								break
+							sleep(60)
+						snapshot_info = self.elastic.getSnapshotInfo(conn_es, opt_repo, opt_index)
+						self.logger.createSnapToolLog("Snapshot creation has finished: " + opt_index, 1)
+						message_creation_end = self.telegram.getMessageEndSnapshot(opt_index, opt_repo, snapshot_info['snapshots'][0]['start_time'], snapshot_info['snapshots'][0]['end_time'])
+						self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_creation_end)
+						self.d.msgbox(text = "\nSnapshot created: " + opt_index, height = 7, width = 50, title = "Notification Message")
+						if snap_tool_conf['is_delete_index'] == True:
+							self.elastic.deleteIndex(conn_es, opt_index)
+							if not conn_es.indices.exists(opt_index):
+								self.logger.createSnapToolLog("Index removed: " + opt_index, 1)
+								message_delete_index = self.telegram.getMessageDeleteIndex(opt_index)
+								self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_delete_index)
+								self.d.msgbox(text = "\nIndex removed: " + opt_index, height = 7, width = 50, title = "Notification Message")
+						else:
+							delete_index = self.getDataYesOrNo("\nDo you want to delete the index?\n\n- " + opt_index, "Delete Index")
+							if delete_index == "ok":
+								self.elastic.deleteIndex(conn_es, opt_index)
+								if not conn_es.indices.exists(opt_index):
+									self.logger.createSnapToolLog("Index removed: " + opt_index, 1)
+									message_delete_index = self.telegram.getMessageDeleteIndex(opt_index)
+									self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_delete_index)
+									self.d.msgbox(text = "\nIndex removed: " + opt_index, height = 7, width = 50, title = "Notification Message")
 				conn_es.transport.close()
 			self.mainMenu()
 		except KeyError as exception:
-			self.logger.createSnapToolLog(exception, 3)
-			self.d.msgbox("\nFailed to create snapshot. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.logger.createSnapToolLog("Key Error: " + exception, 3)
+			self.d.msgbox(text = "\nFailed to create snapshot. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.mainMenu()
 
 	"""
@@ -514,20 +521,20 @@ class FormDialog:
 	def deleteSnapshot(self):
 		try:
 			if not path.exists(self.path_conf_file):
-				self.d.msgbox("\nConfiguration file not found.", 7, 50, title = "Error Message")
+				self.d.msgbox(text = "\nConfiguration file not found.", height = 7, width = 50, title = "Error Message")
 			else:
-				snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
 				conn_es = self.elastic.getConnectionElastic()
 				list_aux_repositories = self.elastic.getAllRepositories(conn_es)
 				if len(list_aux_repositories) == 0:
-					self.d.msgbox("\nThere are no repositories created.", 7, 50, title = "Notification Message")
+					self.d.msgbox(text = "\nThere are no repositories created.", height = 7, width = 50, title = "Notification Message")
 				else:
 					list_all_repositories = self.utils.convertListToCheckOrRadioList(list_aux_repositories, "Repository Name")
 					opt_repo = self.getDataRadioList("Select a option:", list_all_repositories, "Repositories")
 					list_aux_snapshots = self.elastic.getAllSnapshots(conn_es, opt_repo)
 					if len(list_aux_snapshots) == 0:
-						self.d.msgbox("\nThere are no snapshots created.", 7, 50, title = "Notification Message")
+						self.d.msgbox(text = "\nThere are no snapshots created.", height = 7, width = 50, title = "Notification Message")
 					else:
+						snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
 						list_all_snapshots = self.utils.convertListToCheckOrRadioList(list_aux_snapshots, "Snapshot Name")
 						opt_snapshots = self.getDataCheckList("Select one or more options:", list_all_snapshots, "Snapshots")
 						delete_snapshot = self.getDataYesOrNo("\nAre you sure to delete the selected snapshot(s)?", "Delete Snapshot(s)")
@@ -540,9 +547,10 @@ class FormDialog:
 							message += self.utils.convertListToString(opt_snapshots)
 							self.getScrollBox(message, "Snapshot(s) deleted")
 				conn_es.transport.close()
+			self.mainMenu()
 		except KeyError as exception:
-			self.logger.createSnapToolLog(exception, 3)
-			self.d.msgbox("\nFailed to delete snapshot(s). For more information, see the logs.", 8, 50, title = "Error Message")
+			self.logger.createSnapToolLog("Key Error: " + exception, 3)
+			self.d.msgbox(text = "\nFailed to delete snapshot(s). For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.mainMenu()
 
 	"""
@@ -557,32 +565,32 @@ class FormDialog:
 	def restoreSnapshot(self):
 		try:
 			if not path.exists(self.path_conf_file):
-				self.d.msgbox("\nConfiguration file not found.", 7, 50, title = "Error Message")
+				self.d.msgbox(text = "\nConfiguration file not found.", height = 7, width = 50, title = "Error Message")
 			else:
-				snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
 				conn_es = self.elastic.getConnectionElastic()
 				list_aux_repositories = self.elastic.getAllRepositories(conn_es)
 				if len(list_aux_repositories) == 0:
-					self.d.msgbox("\nThere are no repositories created.", 7, 50, title = "Notification Message")
+					self.d.msgbox(text = "\nThere are no repositories created.", height = 7, width = 50, title = "Notification Message")
 				else:
 					list_all_repositories = self.utils.convertListToCheckOrRadioList(list_aux_repositories, "Repository Name")
 					opt_repo = self.getDataRadioList("Select a option:", list_all_repositories, "Repositories")
 					list_aux_snapshots = self.elastic.getAllSnapshots(conn_es, opt_repo)
 					if len(list_aux_snapshots) == 0:
-						self.d.msgbox("\nThere are no snapshots created.", 7, 50, title = "Notification Message")
+						self.d.msgbox(text = "\nThere are no snapshots created.", height = 7, width = 50, title = "Notification Message")
 					else:
+						snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
 						list_all_snapshots = self.utils.convertListToCheckOrRadioList(list_aux_snapshots, "Snapshot Name")
 						opt_snapshot = self.getDataRadioList("Select a option:", list_all_snapshots, "Snapshots")
 						self.elastic.restoreSnapshot(conn_es, opt_repo, opt_snapshot)
 						message_restore_snapshot = self.telegram.getMessageRestoreSnapshot(opt_repo, opt_snapshot)
 						self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_restore_snapshot)
 						self.logger.createSnapToolLog("Snapshot restored: " + opt_snapshot, 1)
-						self.d.msgbox("\nSnapshot restored: " + opt_snapshot + '.', 7, 50, title = "Notification Message")
+						self.d.msgbox(text = "\nSnapshot restored: " + opt_snapshot + '.', height = 7, width = 50, title = "Notification Message")
 				conn_es.transport.close()
-				self.mainMenu()
+			self.mainMenu()
 		except KeyError as exception:
-			self.logger.createSnapToolLog(exception, 3)
-			self.d.msgbox("\nFailed to restore snapshot. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.logger.createSnapToolLog("Key Error: " + exception, 3)
+			self.d.msgbox(text = "\nFailed to restore snapshot. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.mainMenu()
 
 	"""
@@ -597,32 +605,32 @@ class FormDialog:
 	def mountSearchableSnapshot(self):
 		try:
 			if not path.exists(self.path_conf_file):
-				self.d.msgbox("\nConfiguration file not found.", 7, 50, title = "Error Message")
+				self.d.msgbox(text = "\nConfiguration file not found.", height = 7, width = 50, title = "Error Message")
 			else:
-				snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
 				conn_es = self.elastic.getConnectionElastic()
 				list_aux_repositories = self.elastic.getAllRepositories(conn_es)
 				if len(list_aux_repositories) == 0:
-					self.d.msgbox("\nThere are no repositories created.", 7, 50, title = "Notification Message")
+					self.d.msgbox(text = "\nThere are no repositories created.", height = 7, width = 50, title = "Notification Message")
 				else:
 					list_all_repositories = self.utils.convertListToCheckOrRadioList(list_aux_repositories, "Repository Name")
 					opt_repo = self.getDataRadioList("Select a option:", list_all_repositories, "Repositories")
 					list_aux_snapshots = self.elastic.getAllSnapshots(conn_es, opt_repo)
 					if len(list_aux_snapshots) == 0:
-						self.d.msgbox("\nThere are no snapshots created.", 7, 50, title = "Notification Message")
+						self.d.msgbox(text = "\nThere are no snapshots created.", height = 7, width = 50, title = "Notification Message")
 					else:
+						snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
 						list_all_snapshots = self.utils.convertListToCheckOrRadioList(list_aux_snapshots, "Snapshot Name")
 						opt_snapshot = self.getDataRadioList("Select a option:", list_all_snapshots, "Snapshots")
 						self.elastic.mountSearchableSnapshot(conn_es, opt_repo, opt_snapshot)
 						message_searchable_snapshot = self.telegram.getMessageSearchableSnapshot(opt_repo, opt_snapshot)
 						self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_searchable_snapshot)
 						self.logger.createSnapToolLog("Snapshot mounted as searchable snapshot: " + opt_snapshot, 1)
-						self.d.msgbox("\nSnapshot mounted as searchable snapshot: " + opt_snapshot + '.', 8, 50, title = "Notification Message")
+						self.d.msgbox(text = "\nSnapshot mounted as searchable snapshot: " + opt_snapshot + '.', height = 8, width = 50, title = "Notification Message")
 				conn_es.transport.close()
-				self.mainMenu()
+			self.mainMenu()
 		except KeyError as exception:
-			self.logger.createSnapToolLog(exception, 3)
-			self.d.msgbox("\nFailed to mount snapshot as a searchable snapshot. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.logger.createSnapToolLog("Key Error: " + exception, 3)
+			self.d.msgbox(text = "\nFailed to mount snapshot as a searchable snapshot. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.mainMenu()
 
 	"""
@@ -637,7 +645,7 @@ class FormDialog:
 	def deleteIndices(self):
 		try:
 			if not path.exists(self.path_conf_file):
-				self.d.msgbox("\nConfiguration file not found.", 7, 50, title = "Error Message")
+				self.d.msgbox(text = "\nConfiguration file not found.", height = 7, width = 50, title = "Error Message")
 			else:
 				conn_es = self.elastic.getConnectionElastic()
 				list_aux_indices = self.elastic.getIndices(conn_es)
@@ -661,7 +669,7 @@ class FormDialog:
 			self.mainMenu()
 		except KeyError as exception:
 			self.logger.createSnapToolLog("Key Error: " + exception, 3)
-			self.d.msgbox("\nFailed to delete indices. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.d.msgbox(text = "\nFailed to delete indices. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.mainMenu()
 
 	"""
@@ -671,17 +679,17 @@ class FormDialog:
 	self -- An instantiated object of the FormDialog class.
 	"""
 	def showNodesDiskSpace(self):
-		message = "Occupied space in nodes:\n\n"
+		message_to_display = "Occupied space in nodes:\n\n"
 		conn_es = self.elastic.getConnectionElastic()
 		nodes_info = self.elastic.getNodesInformation(conn_es)
 		for node in nodes_info:
-				message += "- " + nodes_info[node]['name'] + "\n"
+				message_to_display += "- " + nodes_info[node]['name'] + '\n'
 				total_disk = nodes_info[node]['fs']['total']['total_in_bytes']
 				available_disk = nodes_info[node]['fs']['total']['available_in_bytes']
 				percentage = 100 - (available_disk * 100 / total_disk)
-				message += "Percent occupied on disk: " + str(round(percentage, 2)) + "%\n\n"
+				message_to_display += "Percent occupied on disk: " + str(round(percentage, 2)) + "%\n\n"
 		conn_es.transport.close()
-		self.getScrollBox(message, "Node Information")
+		self.getScrollBox(message_to_display, "Node Information")
 		self.mainMenu()
 
 	"""
@@ -719,6 +727,19 @@ class FormDialog:
 			exit(0)
 
 	"""
+	Method that launches an action based on the option chosen in the Repositories menu.
+
+	Parameters:
+	self -- An instantiated object of the FormDialog class.
+	option -- Chosen option.
+	"""
+	def switchRmenu(self, option):
+		if option == 1:
+			self.createRepository()
+		elif option == 2:
+			self.deleteSnapshot()
+
+	"""
 	Method that launches an action based on the option chosen in the Snapshots menu.
 
 	Parameters:
@@ -736,19 +757,6 @@ class FormDialog:
 			self.mountSearchableSnapshot()
 
 	"""
-	Method that launches an action based on the option chosen in the Repositories menu.
-
-	Parameters:
-	self -- An instantiated object of the FormDialog class.
-	option -- Chosen option.
-	"""
-	def switchRmenu(self, option):
-		if option == 1:
-			self.createRepository()
-		elif option == 2:
-			self.deleteSnapshot()
-
-	"""
 	Method that launches an action based on the option chosen in the Indices menu.
 
 	Parameters:
@@ -758,46 +766,6 @@ class FormDialog:
 	def switchImenu(self, option):
 		if option == 1:
 			self.deleteIndices()
-
-	"""
-	Method that defines the menu of actions that can be performed in relation to snaphosts.
-
-	Parameters:
-	self -- An instantiated object of the FormDialog class.
-	"""
-	def snapshotMenu(self):
-		options_sm = [("1", "Create Snapshot"),
-					  ("2", "Delete Snapshot(s)"),
-					  ("3", "Restore snapshot"),
-					  ("4", "Mount searchable snapshot")]
-
-		option_sm = self.getMenu("Select a option:", options_sm, "Snapshots Menu")
-		self.switchSmenu(int(option_sm))
-
-	"""
-	Method that defines the menu of actions that can be performed in relation to repositories.
-
-	Parameters:
-	self -- An instantiated object of the FormDialog class.
-	"""
-	def repositoryMenu(self):
-		options_rm = [("1", "Create repository"),
-					  ("2", "Delete repositories")]
-
-		option_rm = self.getMenu("Select a option:", options_rm, "Repositories menu")
-		self.switchRmenu(int(option_rm))
-
-	"""
-	Method that defines the menu of actions that can be performed in relation to indices.
-
-	Parameters:
-	self -- An instantiated object of the FormDialog class.
-	"""
-	def indicesMenu(self):
-		options_im = [("1", "Delete indices")]
-
-		option_im = self.getMenu("Select a option:", options_im, "Indices Menu")
-		self.switchImenu(int(option_im))
 
 	"""
 	Method that defines the menu on the actions to be carried out in the main menu.
@@ -816,3 +784,43 @@ class FormDialog:
 
 		option_mm = self.getMenu("Select a option:", options_mm, "Main Menu")
 		self.switchMmenu(int(option_mm))
+
+	"""
+	Method that defines the menu of actions that can be performed in relation to repositories.
+
+	Parameters:
+	self -- An instantiated object of the FormDialog class.
+	"""
+	def repositoryMenu(self):
+		options_rm = [("1", "Create repository"),
+					  ("2", "Delete repositories")]
+
+		option_rm = self.getMenu("Select a option:", options_rm, "Repositories menu")
+		self.switchRmenu(int(option_rm))
+
+	"""
+	Method that defines the menu of actions that can be performed in relation to snaphosts.
+
+	Parameters:
+	self -- An instantiated object of the FormDialog class.
+	"""
+	def snapshotMenu(self):
+		options_sm = [("1", "Create Snapshot"),
+					  ("2", "Delete Snapshot(s)"),
+					  ("3", "Restore snapshot"),
+					  ("4", "Mount searchable snapshot")]
+
+		option_sm = self.getMenu("Select a option:", options_sm, "Snapshots Menu")
+		self.switchSmenu(int(option_sm))
+
+	"""
+	Method that defines the menu of actions that can be performed in relation to indices.
+
+	Parameters:
+	self -- An instantiated object of the FormDialog class.
+	"""
+	def indicesMenu(self):
+		options_im = [("1", "Delete indices")]
+
+		option_im = self.getMenu("Select a option:", options_im, "Indices Menu")
+		self.switchImenu(int(option_im))

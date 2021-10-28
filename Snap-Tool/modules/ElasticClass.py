@@ -117,32 +117,10 @@ class Elastic:
 				self.logger.createSnapToolLog("Established connection with: " + self.snap_tool_conf['es_host'] + ':' + str(self.snap_tool_conf['es_port']), 1)
 		except (KeyError, exceptions.ConnectionError, exceptions.AuthenticationException, exceptions.AuthorizationException, InvalidURL) as exception:
 			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nFailed to connect to ElasticSearch. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.form_dialog.d.msgbox(text = "\nFailed to connect to ElasticSearch. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			exit(1)
 		else:
 			return conn_es
-
-	"""
-	Method that creates a snapshot of an index.
-
-	Parameters:
-	self -- An instantiated object of the Elastic class.
-	conn_es -- Object that contains the connection to ElasticSearch.
-	repository_name -- Repository where the snapshot will be stored.
-	index_name -- Name of the index to be backed up in the snapshot.
-
-	Exceptions:
-	exceptions.RequestError -- Exception representing a 400 status code. 
-	exceptions.NotFoundError -- Exception representing a 404 status code.
-	exceptions.AuthorizationException -- Exception representing a 403 status code.
-	"""
-	def createSnapshot(self, conn_es, repository_name, index_name):
-		try:
-			conn_es.snapshot.create(repository = repository_name, snapshot = index_name, body = { 'indices' : index_name, "include_global_state" : False }, wait_for_completion = False)
-		except (exceptions.AuthorizationException, exceptions.RequestError, exceptions.NotFoundError) as exception:
-			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nFailed to create snapshot. For more information, see the logs.", 8, 50, title = "Error Message")
-			self.form_dialog.mainMenu()
 
 	"""
 	Method that creates a repository type FS.
@@ -165,7 +143,7 @@ class Elastic:
 											   body = { "type": "fs", "settings": { "location": path_repository, "compress" : compress_repository }})
 		except (exceptions.AuthorizationException, exceptions.ConnectionError, exceptions.TransportError) as exception:
 			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nError creating repository. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.form_dialog.d.msgbox(text = "\nError creating repository. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.form_dialog.mainMenu()
 
 	"""
@@ -179,114 +157,37 @@ class Elastic:
 	Exceptions:
 	exceptions.NotFoundError -- Exception representing a 404 status code.
 	exceptions.AuthorizationException -- Exception representing a 403 status code.
+	exceptions.ConnectionError --  Error raised when there was an exception while talking to ES.
 	"""
 	def deleteRepositoryFS(self, conn_es, repository_name):
 		try:
 			conn_es.snapshot.delete_repository(repository = repository_name)
-		except (exceptions.NotFoundError, exceptions.AuthorizationException) as exception:
+		except (exceptions.NotFoundError, exceptions.AuthorizationException, exceptions.ConnectionError) as exception:
 			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nFailed to delete repository. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.form_dialog.d.msgbox(text = "\nFailed to delete repository. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.form_dialog.mainMenu()
 
 	"""
-	Method that gets the status of a snapshot.
+	Method that creates a snapshot of an index.
 
 	Parameters:
 	self -- An instantiated object of the Elastic class.
 	conn_es -- Object that contains the connection to ElasticSearch.
-	repository_name -- Repository where the snapshot is stored.
-	snapshot_name -- Name of the snapshot from which the status will be obtained.
-
-	Return:
-	status_snapshot -- Status of the snapshot.
+	repository_name -- Repository where the snapshot will be stored.
+	index_name -- Name of the index to be backed up in the snapshot.
 
 	Exceptions:
+	exceptions.RequestError -- Exception representing a 400 status code. 
 	exceptions.NotFoundError -- Exception representing a 404 status code.
 	exceptions.AuthorizationException -- Exception representing a 403 status code.
+	exceptions.ConnectionError --  Error raised when there was an exception while talking to ES.
 	"""
-	def getStatusSnapshot(self, conn_es, repository_name, snapshot_name):
+	def createSnapshot(self, conn_es, repository_name, index_name):
 		try:
-			status_aux = conn_es.snapshot.status(repository = repository_name, snapshot = snapshot_name)
-			status_snapshot = status_aux['snapshots'][0]['state']
-		except (exceptions.NotFoundError, exceptions.AuthorizationException) as exception:
+			conn_es.snapshot.create(repository = repository_name, snapshot = index_name, body = { 'indices' : index_name, "include_global_state" : False }, wait_for_completion = False)
+		except (exceptions.AuthorizationException, exceptions.RequestError, exceptions.NotFoundError, exceptions.ConnectionError) as exception:
 			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nFailed to get snapshot status. For more information, see the logs.", 8, 50, title = "Error Message")
-			self.form_dialog.mainMenu()
-		else:
-			return status_snapshot
-
-	"""
-	Method that gets the status of a snapshot.
-
-	Parameters:
-	self -- An instantiated object of the Elastic class.
-	conn_es -- Object that contains the connection to ElasticSearch.
-	repository_name -- Repository where the snapshot is stored.
-	snapshot_name -- Name of the snapshot from which the information will be obtained.
-
-	Return:
-	snapshot_info -- Information obtained from the snapshot.
-
-	Exceptions:
-	exceptions.NotFoundError -- Exception representing a 404 status code.
-	exceptions.AuthorizationException -- Exception representing a 403 status code.
-	"""
-	def getSnapshotInfo(self, conn_es, repository_name, snapshot_name):
-		try:
-			snapshot_info = conn_es.snapshot.get(repository = repository_name, snapshot = snapshot_name)
-		except (exceptions.NotFoundError, exceptions.AuthorizationException) as exception:
-			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nFailed to get snapshot status. For more information, see the logs.", 8, 50, title = "Error Message")
-			self.form_dialog.mainMenu()
-		else:
-			return snapshot_info
-
-	"""
-	Method that gets a list of all the snapshots created so far.
-
-	Parameters:
-	conn_es -- Object that contains the connection to ElasticSearch.
-	repository_name -- Repository where the snapshots are stored.
-
-	Return:
-	list_all_snapshots -- List with the names of all snapshots found in the repository.
-
-	Exceptions:
-	exceptions.NotFoundError -- Exception representing a 404 status code.
-	exceptions.AuthorizationException -- Exception representing a 403 status code.
-	"""
-	def getAllSnapshots(self, conn_es, repository_name):
-		list_all_snapshots = []
-		try:
-			snapshots_info = conn_es.snapshot.get(repository = repository_name, snapshot = '_all')
-			for snapshot in snapshots_info['snapshots']:
-				list_all_snapshots.append(snapshot['snapshot'])
-			list_all_snapshots = sorted(list_all_snapshots)
-		except (exceptions.NotFoundError, exceptions.AuthorizationException) as exception:
-			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nFailed to get snapshots. For more information, see the logs.", 8, 50, title = "Error Message")
-			self.form_dialog.mainMenu()
-		else:
-			return list_all_snapshots
-
-	"""
-	Method that restores a snapshot.
-
-	Parameters:
-	conn_es -- Object that contains the connection to ElasticSearch.
-	repository_name -- Repository where the snapshot is stored.
-	snapshot_name -- Name of the snapshot to restore.
-
-	Exceptions:
-	exceptions.NotFoundError -- Exception representing a 404 status code.
-	exceptions.AuthorizationException -- Exception representing a 403 status code.
-	"""
-	def restoreSnapshot(self, conn_es, repository_name, snapshot_name):
-		try:
-			conn_es.snapshot.restore(repository = repository_name, snapshot = snapshot_name)
-		except (exceptions.NotFoundError, exceptions.AuthorizationException) as exception:
-			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nFailed to restore snapshot. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.form_dialog.d.msgbox(text = "\nFailed to create snapshot. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.form_dialog.mainMenu()
 
 	"""
@@ -300,13 +201,35 @@ class Elastic:
 	Exceptions:
 	exceptions.NotFoundError -- Exception representing a 404 status code.
 	exceptions.AuthorizationException -- Exception representing a 403 status code.
+	exceptions.ConnectionError --  Error raised when there was an exception while talking to ES.
 	"""
 	def deleteSnapshotElastic(self, conn_es, repository_name, snapshot_name):
 		try:
 			conn_es.snapshot.delete(repository = repository_name, snapshot = snapshot_name, request_timeout = 7200)
-		except (exceptions.NotFoundError, exceptions.AuthorizationException) as exception:
+		except (exceptions.NotFoundError, exceptions.AuthorizationException, exceptions.ConnectionError) as exception:
 			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nFailed to delete snapshot. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.form_dialog.d.msgbox(text = "\nFailed to delete snapshot. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
+			self.form_dialog.mainMenu()
+
+	"""
+	Method that restores a snapshot.
+
+	Parameters:
+	conn_es -- Object that contains the connection to ElasticSearch.
+	repository_name -- Repository where the snapshot is stored.
+	snapshot_name -- Name of the snapshot to restore.
+
+	Exceptions:
+	exceptions.NotFoundError -- Exception representing a 404 status code.
+	exceptions.AuthorizationException -- Exception representing a 403 status code.
+	exceptions.ConnectionError --  Error raised when there was an exception while talking to ES.
+	"""
+	def restoreSnapshot(self, conn_es, repository_name, snapshot_name):
+		try:
+			conn_es.snapshot.restore(repository = repository_name, snapshot = snapshot_name)
+		except (exceptions.NotFoundError, exceptions.AuthorizationException, exceptions.ConnectionError) as exception:
+			self.logger.createSnapToolLog(exception, 3)
+			self.form_dialog.d.msgbox(text = "\nFailed to restore snapshot. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.form_dialog.mainMenu()
 
 	"""
@@ -320,85 +243,15 @@ class Elastic:
 	Exceptions:
 	exceptions.NotFoundError -- Exception representing a 404 status code.
 	exceptions.AuthorizationException -- Exception representing a 403 status code.
+	exceptions.ConnectionError --  Error raised when there was an exception while talking to ES.
 	"""
 	def mountSearchableSnapshot(self, conn_es, repository_name, snapshot_name):
 		try:
 			conn_es.searchable_snapshots.mount(repository = repository_name, snapshot = snapshot_name, body = { "index" : snapshot_name }, wait_for_completion = False, request_timeout = 7200)
-		except (exceptions.NotFoundError, exceptions.AuthorizationException) as exception:
+		except (exceptions.NotFoundError, exceptions.AuthorizationException, exceptions.ConnectionError) as exception:
 			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nFailed to mount snapshot as a searchable snapshot. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.form_dialog.d.msgbox(text = "\nFailed to mount snapshot as a searchable snapshot. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.form_dialog.mainMenu()
-
-	"""
-	Method that obtains a list with the names of the ElasticSearch indexes.
-
-	Parameters:
-	self -- An instantiated object of the Elastic class.
-	conn_es -- Object that contains the connection to ElasticSearch.
-
-	Return:
-	list_all_indices -- List with the names of the indices found.
-
-	Exceptions:
-	exceptions.AuthorizationException -- Exception representing a 403 status code.
-	"""
-	def getIndices(self, conn_es):
-		list_all_indices = []
-		try:
-			list_all_indices = conn_es.indices.get('*')
-			list_all_indices = sorted([index for index in list_all_indices if not index.startswith(".")])
-		except exceptions.AuthorizationException as exception:
-			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nFailed to get created repositories. For more information, see the logs.", 8, 50, title = "Error Message")
-			self.form_dialog.mainMenu()
-		else:
-			return list_all_indices
-
-	"""
-	Method that gets the repositories created in ElasticSearch.
-
-	Parameters:
-	self -- An instantiated object of the Elastic class.
-	conn_es -- Object that contains the connection to ElasticSearch.
-
-	Return:
-	list_all_repositories -- List with the names of the repositories found.
-
-	Exceptions:
-	exceptions.AuthorizationException -- Exception representing a 403 status code.
-	"""
-	def getAllRepositories(self, conn_es):
-		list_all_repositories = []
-		try:
-			repositories_info = conn_es.cat.repositories(format = "json")
-			for repository in repositories_info:
-				list_all_repositories.append(repository['id'])
-		except exceptions.AuthorizationException as exception:
-			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nFailed to get created repositories. For more information, see the logs.", 8, 50, title = "Error Message")
-			self.form_dialog.mainMenu()
-		else:
-			return list_all_repositories
-
-	"""
-	Method that obtains information related to the disk space corresponding to the nodes belonging to the elasticsearch cluster.
-
-	Parameters:
-	self -- An instantiated object of the Elastic class.
-	conn_es -- Object that contains the connection to ElasticSearch.
-
-	Exceptions:
-	exceptions.AuthorizationException -- Exception representing a 403 status code.
-	"""
-	def getNodesInformation(self, conn_es):
-		try:
-			nodes_info = conn_es.nodes.stats(metric = 'fs')['nodes']
-		except exceptions.AuthorizationException as exception:
-			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nError when obtaining the information of the nodes. For more information, see the logs.", 8, 50, title = "Error Message")
-			self.form_dialog.mainMenu()
-		else:
-			return nodes_info
 
 	"""
 	Method that removes an index from ElasticSearch.
@@ -418,5 +271,163 @@ class Elastic:
 			conn_es.indices.delete(index = index_name)
 		except (exceptions.NotFoundError, exceptions.AuthorizationException, exceptions.ConnectionError) as exception:
 			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nFailed to delete index. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.form_dialog.d.msgbox(text = "\nFailed to delete index. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.form_dialog.mainMenu()
+			
+	"""
+	Method that gets the status of a snapshot.
+
+	Parameters:
+	self -- An instantiated object of the Elastic class.
+	conn_es -- Object that contains the connection to ElasticSearch.
+	repository_name -- Repository where the snapshot is stored.
+	snapshot_name -- Name of the snapshot from which the status will be obtained.
+
+	Return:
+	status_snapshot -- Status of the snapshot.
+
+	Exceptions:
+	exceptions.NotFoundError -- Exception representing a 404 status code.
+	exceptions.AuthorizationException -- Exception representing a 403 status code.
+	exceptions.ConnectionError --  Error raised when there was an exception while talking to ES.
+	"""
+	def getStatusSnapshot(self, conn_es, repository_name, snapshot_name):
+		try:
+			status_aux = conn_es.snapshot.status(repository = repository_name, snapshot = snapshot_name)
+			status_snapshot = status_aux['snapshots'][0]['state']
+		except (exceptions.NotFoundError, exceptions.AuthorizationException, exceptions.ConnectionError) as exception:
+			self.logger.createSnapToolLog(exception, 3)
+			self.form_dialog.d.msgbox(text = "\nFailed to get snapshot status. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
+			self.form_dialog.mainMenu()
+		else:
+			return status_snapshot
+
+	"""
+	Method that gets the status of a snapshot.
+
+	Parameters:
+	self -- An instantiated object of the Elastic class.
+	conn_es -- Object that contains the connection to ElasticSearch.
+	repository_name -- Repository where the snapshot is stored.
+	snapshot_name -- Name of the snapshot from which the information will be obtained.
+
+	Return:
+	snapshot_info -- Information obtained from the snapshot.
+
+	Exceptions:
+	exceptions.NotFoundError -- Exception representing a 404 status code.
+	exceptions.AuthorizationException -- Exception representing a 403 status code.
+	exceptions.ConnectionError --  Error raised when there was an exception while talking to ES.
+	"""
+	def getSnapshotInfo(self, conn_es, repository_name, snapshot_name):
+		try:
+			snapshot_info = conn_es.snapshot.get(repository = repository_name, snapshot = snapshot_name)
+		except (exceptions.NotFoundError, exceptions.AuthorizationException, exceptions.ConnectionError) as exception:
+			self.logger.createSnapToolLog(exception, 3)
+			self.form_dialog.d.msgbox(text = "\nFailed to get snapshot status. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
+			self.form_dialog.mainMenu()
+		else:
+			return snapshot_info
+
+	"""
+	Method that obtains a list with the names of the ElasticSearch indexes.
+
+	Parameters:
+	self -- An instantiated object of the Elastic class.
+	conn_es -- Object that contains the connection to ElasticSearch.
+
+	Return:
+	list_all_indices -- List with the names of the indices found.
+
+	Exceptions:
+	exceptions.AuthorizationException -- Exception representing a 403 status code.
+	exceptions.ConnectionError --  Error raised when there was an exception while talking to ES.
+	"""
+	def getIndices(self, conn_es):
+		list_all_indices = []
+		try:
+			list_all_indices = conn_es.indices.get('*')
+			list_all_indices = sorted([index for index in list_all_indices if not index.startswith(".")])
+		except (exceptions.AuthorizationException, exceptions.ConnectionError) as exception:
+			self.logger.createSnapToolLog(exception, 3)
+			self.form_dialog.d.msgbox(text = "\nFailed to get created repositories. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
+			self.form_dialog.mainMenu()
+		else:
+			return list_all_indices
+
+	"""
+	Method that gets a list of all the snapshots created so far.
+
+	Parameters:
+	conn_es -- Object that contains the connection to ElasticSearch.
+	repository_name -- Repository where the snapshots are stored.
+
+	Return:
+	list_all_snapshots -- List with the names of all snapshots found in the repository.
+
+	Exceptions:
+	exceptions.NotFoundError -- Exception representing a 404 status code.
+	exceptions.AuthorizationException -- Exception representing a 403 status code.
+	exceptions.ConnectionError --  Error raised when there was an exception while talking to ES.
+	"""
+	def getAllSnapshots(self, conn_es, repository_name):
+		list_all_snapshots = []
+		try:
+			snapshots_info = conn_es.snapshot.get(repository = repository_name, snapshot = '_all')
+			for snapshot in snapshots_info['snapshots']:
+				list_all_snapshots.append(snapshot['snapshot'])
+			list_all_snapshots = sorted(list_all_snapshots)
+		except (exceptions.NotFoundError, exceptions.AuthorizationException, exceptions.ConnectionError) as exception:
+			self.logger.createSnapToolLog(exception, 3)
+			self.form_dialog.d.msgbox(text = "\nFailed to get snapshots. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
+			self.form_dialog.mainMenu()
+		else:
+			return list_all_snapshots
+
+	"""
+	Method that gets the repositories created in ElasticSearch.
+
+	Parameters:
+	self -- An instantiated object of the Elastic class.
+	conn_es -- Object that contains the connection to ElasticSearch.
+
+	Return:
+	list_all_repositories -- List with the names of the repositories found.
+
+	Exceptions:
+	exceptions.AuthorizationException -- Exception representing a 403 status code.
+	exceptions.ConnectionError --  Error raised when there was an exception while talking to ES.
+	"""
+	def getAllRepositories(self, conn_es):
+		list_all_repositories = []
+		try:
+			repositories_info = conn_es.cat.repositories(format = "json")
+			for repository in repositories_info:
+				list_all_repositories.append(repository['id'])
+		except (exceptions.AuthorizationException, exceptions.ConnectionError) as exception:
+			self.logger.createSnapToolLog(exception, 3)
+			self.form_dialog.d.msgbox(text = "\nFailed to get created repositories. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
+			self.form_dialog.mainMenu()
+		else:
+			return list_all_repositories
+
+	"""
+	Method that obtains information related to the disk space corresponding to the nodes belonging to the elasticsearch cluster.
+
+	Parameters:
+	self -- An instantiated object of the Elastic class.
+	conn_es -- Object that contains the connection to ElasticSearch.
+
+	Exceptions:
+	exceptions.AuthorizationException -- Exception representing a 403 status code.
+	exceptions.ConnectionError --  Error raised when there was an exception while talking to ES.
+	"""
+	def getNodesInformation(self, conn_es):
+		try:
+			nodes_info = conn_es.nodes.stats(metric = 'fs')['nodes']
+		except (exceptions.AuthorizationException, exceptions.ConnectionError) as exception:
+			self.logger.createSnapToolLog(exception, 3)
+			self.form_dialog.d.msgbox(text = "\nError when obtaining the information of the nodes. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
+			self.form_dialog.mainMenu()
+		else:
+			return nodes_info

@@ -3,8 +3,7 @@ from modules.UtilsClass import Utils
 from modules.LoggerClass import Logger
 
 """
-Class that manages everything related to the Snap-Tool
-configuration file.
+Class that manages everything related to the Snap-Tool configuration file.
 """
 class Configuration:
 	"""
@@ -18,7 +17,7 @@ class Configuration:
 	logger = None
 
 	"""
-	Property that stores an object of type FormDialogs.
+	Property that stores an object of type FormDialog.
 	"""
 	form_dialog = None
 
@@ -32,6 +31,7 @@ class Configuration:
 
 	Parameters:
 	self -- An instantiated object of the Configuration class.
+	form_dialog -- FormDialog class object.
 	"""
 	def __init__(self, form_dialog):
 		self.logger = Logger()
@@ -60,7 +60,7 @@ class Configuration:
 			valid_certificate = self.form_dialog.getDataYesOrNo("\nDo you want the certificate for SSL/TLS communication to be validated?", "Certificate Validation")
 			if valid_certificate == "ok":
 				data_conf.append(True)
-				path_cert_file = self.form_dialog.getFile('/etc/Snap-Tool', "Select the CA certificate:")
+				path_cert_file = self.form_dialog.getFile('/etc/Snap-Tool', "Select the CA certificate:", ".pem")
 				data_conf.append(path_cert_file)
 			else:
 				data_conf.append(False)
@@ -86,10 +86,10 @@ class Configuration:
 			data_conf.append(False)
 		self.createFileConfiguration(data_conf)
 		if path.exists(self.conf_file):
-			self.form_dialog.d.msgbox("\nConfiguration file created", 7, 50, title = "Notification Message")
+			self.form_dialog.d.msgbox(text = "\nConfiguration file created", height = 7, width = 50, title = "Notification Message")
 			self.logger.createSnapToolLog("Configuration file created", 2)
 		else:
-			self.form_dialog.d.msgbox("\nError creating configuration file. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.form_dialog.d.msgbox(text = "\nError creating configuration file. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 		self.form_dialog.mainMenu()
 	
 	"""
@@ -190,13 +190,13 @@ class Configuration:
 									del data_conf['path_certificate']
 								data_conf['valid_certificate'] = False
 							elif opt_valid_cert_true == "Certificate File":
-								path_cert_file = self.form_dialog.getFile(data_conf['path_certificate'], "Select the CA certificate:")
+								path_cert_file = self.form_dialog.getFile(data_conf['path_certificate'], "Select the CA certificate:", ".pem")
 								data_conf['path_certificate'] = path_cert_file
 						else:
 							opt_valid_cert_false = self.form_dialog.getDataRadioList("Select a option:", options_valid_cert_false, "Certificate Validation")
 							if opt_valid_cert_false == "Enable":
 								data_conf['valid_certificate'] = True
-								path_cert_file = self.form_dialog.getFile('/etc/Snap-Tool', "Select the CA certificate:")
+								path_cert_file = self.form_dialog.getFile('/etc/Snap-Tool', "Select the CA certificate:", ".pem")
 								valid_cert_json = { 'path_certificate' : path_cert_file }
 								data_conf.update(valid_cert_json)
 				else:
@@ -205,7 +205,7 @@ class Configuration:
 						data_conf['use_ssl'] = True
 						valid_certificate = self.form_dialog.getDataYesOrNo("\nDo you want the certificates for SSL/TLS communication to be validated?", "Certificate Validation")
 						if valid_certificate == "ok":
-							path_cert_file = self.form_dialog.getFile('/etc/Snap-Tool', "Select the CA certificate:")
+							path_cert_file = self.form_dialog.getFile('/etc/Snap-Tool', "Select the CA certificate:", ".pem")
 							valid_cert_json = { 'valid_certificate' : True, 'path_certificate' : path_cert_file }
 						else:
 							valid_cert_json = { 'valid_certificate' : False }
@@ -258,14 +258,14 @@ class Configuration:
 			self.utils.createYamlFile(data_conf, self.conf_file, 'w')
 			hash_data_conf_upd = self.utils.getHashToFile(self.conf_file)
 			if hash_data_conf == hash_data_conf_upd:
-				self.form_dialog.d.msgbox("\nThe configuration file was not modified.", 7, 50, title = "Notification Message")
+				self.form_dialog.d.msgbox(text = "\nThe configuration file was not modified.", height = 7, width = 50, title = "Notification Message")
 			else:
 				self.logger.createSnapToolLog("The configuration file was modified", 1)
-				self.form_dialog.d.msgbox("\nThe configuration file was modified.", 7, 50, title = "Notification Message")
+				self.form_dialog.d.msgbox(text = "\nThe configuration file was modified.", height = 7, width = 50, title = "Notification Message")
 			self.form_dialog.mainMenu()	
 		except (OSError, KeyError) as exception:
 			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nError modifying the configuration file. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.form_dialog.d.msgbox(text = "\nError modifying the configuration file. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.form_dialog.mainMenu()
 
 	"""

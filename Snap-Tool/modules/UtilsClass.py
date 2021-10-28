@@ -56,7 +56,7 @@ class Utils:
 				safe_dump(data, file_yaml, default_flow_style = False)
 		except IOError as exception:
 			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nError creating YAML file. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.form_dialog.d.msgbox(text = "\nError creating YAML file. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.form_dialog.mainMenu()
 
 	"""
@@ -79,7 +79,7 @@ class Utils:
 				data_file_yaml = safe_load(file_yaml)
 		except IOError as exception:
 			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nError opening or reading the YAML file. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.form_dialog.d.msgbox(text = "\nError opening or reading the YAML file. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.form_dialog.mainMenu()
 		else:
 			return data_file_yaml
@@ -104,7 +104,7 @@ class Utils:
 			path_final = path.join(path_main, path_dir)
 		except (OSError, TypeError) as exception:
 			self.logger.createLogSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nAn error has occurred. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.form_dialog.d.msgbox(text = "\nAn error has occurred. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.form_dialog.mainMenu()
 		else:
 			return path_final
@@ -128,7 +128,7 @@ class Utils:
 			file_key.close()
 		except FileNotFoundError as exception:
 			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nError opening or reading the Key file. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.form_dialog.d.msgbox(text = "\nError opening or reading the Key file. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.form_dialog.mainMenu()
 		else:
 			return pass_key
@@ -203,7 +203,7 @@ class Utils:
 					hash_sha.update(block)
 		except IOError as exception:
 			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nError getting the file's hash function. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.form_dialog.d.msgbox(text = "\nError getting the file's hash function. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.form_dialog.mainMenu()
 		else:
 			return hash_sha.hexdigest()
@@ -219,7 +219,7 @@ class Utils:
 	Encrypted text.
 
 	Exceptions:
-	binascii.Error -- Is raised if were incorrectly padded or if there are non-alphabet characters present in the string. 
+	Exception -- It is thrown when any exception is found.
 	"""
 	def encryptAES(self, text):
 		try:
@@ -229,7 +229,7 @@ class Utils:
 			aes = AES.new(key, AES.MODE_CBC, IV)
 		except Exception as exception:
 			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nFailed to encrypt the data. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.form_dialog.d.msgbox(text = "\nFailed to encrypt the data. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.form_dialog.mainMenu()
 		else:
 			return b64encode(IV + aes.encrypt(pad(text_bytes, AES.block_size)))
@@ -255,7 +255,7 @@ class Utils:
 			aes = AES.new(key, AES.MODE_CBC, IV)
 		except binascii.Error as exception:
 			self.logger.createSnapToolLog(exception, 3)
-			self.form_dialog.d.msgbox("\nFailed to decrypt the data. For more information, see the logs.", 8, 50, title = "Error Message")
+			self.form_dialog.d.msgbox(text = "\nFailed to decrypt the data. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.form_dialog.mainMenu()
 		else:
 			return unpad(aes.decrypt(text_encrypt[AES.block_size:]), AES.block_size)
