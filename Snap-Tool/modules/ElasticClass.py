@@ -32,11 +32,6 @@ class Elastic:
 	form_dialog = None
 
 	"""
-	Property that stores the information defined in the Snap-Tool configuration file.
-	"""
-	snap_tool_conf = None
-
-	"""
 	Constructor for the Elastic class.
 
 	Parameters:
@@ -47,7 +42,6 @@ class Elastic:
 		self.logger = Logger()
 		self.form_dialog = form_dialog
 		self.utils = Utils(form_dialog)
-		self.snap_tool_conf = self.utils.readYamlFile(self.utils.getPathSnapTool('conf') + '/snap_tool_conf.yaml', 'r')
 
 	"""
 	Method that creates a connection object with ElasticSearch.
@@ -67,54 +61,55 @@ class Elastic:
 	"""
 	def getConnectionElastic(self):
 		conn_es = None
+		snap_tool_conf = self.utils.readYamlFile(self.utils.getPathSnapTool('conf') + '/snap_tool_conf.yaml', 'r')
 		try:
-			if(not self.snap_tool_conf['use_ssl'] == True) and (not self.snap_tool_conf['use_http_auth'] == True):
-				conn_es = Elasticsearch(self.snap_tool_conf['es_host'],
-										port = self.snap_tool_conf['es_port'],
+			if(not snap_tool_conf['use_ssl'] == True) and (not snap_tool_conf['use_http_auth'] == True):
+				conn_es = Elasticsearch(snap_tool_conf['es_host'],
+										port = snap_tool_conf['es_port'],
 										connection_class = RequestsHttpConnection,
 										use_ssl = False)
-			if(not self.snap_tool_conf['use_ssl'] == True) and self.snap_tool_conf['use_http_auth'] == True:
-				conn_es = Elasticsearch(self.snap_tool_conf['es_host'],
-										port = self.snap_tool_conf['es_port'],
+			if(not snap_tool_conf['use_ssl'] == True) and snap_tool_conf['use_http_auth'] == True:
+				conn_es = Elasticsearch(snap_tool_conf['es_host'],
+										port = snap_tool_conf['es_port'],
 										connection_class = RequestsHttpConnection,
-										http_auth = (self.utils.decryptAES(self.snap_tool_conf['http_auth_user']).decode('utf-8'), self.utils.decryptAES(self.snap_tool_conf['http_auth_pass']).decode('utf-8')),
+										http_auth = (self.utils.decryptAES(snap_tool_conf['http_auth_user']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['http_auth_pass']).decode('utf-8')),
 										use_ssl = False)
-			if self.snap_tool_conf['use_ssl'] == True and (not self.snap_tool_conf['use_http_auth'] == True):
-				if not self.snap_tool_conf['valid_certificate']:
-					conn_es = Elasticsearch(self.snap_tool_conf['es_host'],
-											port = self.snap_tool_conf['es_port'],
+			if snap_tool_conf['use_ssl'] == True and (not snap_tool_conf['use_http_auth'] == True):
+				if not snap_tool_conf['valid_certificate']:
+					conn_es = Elasticsearch(snap_tool_conf['es_host'],
+											port = snap_tool_conf['es_port'],
 											connection_class = RequestsHttpConnection,
 											use_ssl = True,
 											verify_certs = False,
 											ssl_show_warn = False)
 				else:
-					context = create_default_context(cafile = self.snap_tool_conf['path_certificate'])
-					conn_es = Elasticsearch(self.snap_tool_conf['es_host'],
-											port = self.snap_tool_conf['es_port'],
+					context = create_default_context(cafile = snap_tool_conf['path_certificate'])
+					conn_es = Elasticsearch(snap_tool_conf['es_host'],
+											port = snap_tool_conf['es_port'],
 											connection_class = RequestsHttpConnection,
 											use_ssl = True,
 											verify_certs = True,
 											ssl_context = context)
-			if self.snap_tool_conf['use_ssl'] == True and self.snap_tool_conf['use_http_auth'] == True:
-				if not self.snap_tool_conf['valid_certificate'] == True:
-					conn_es = Elasticsearch(self.snap_tool_conf['es_host'],
-											port = self.snap_tool_conf['es_port'],
+			if snap_tool_conf['use_ssl'] == True and snap_tool_conf['use_http_auth'] == True:
+				if not snap_tool_conf['valid_certificate'] == True:
+					conn_es = Elasticsearch(snap_tool_conf['es_host'],
+											port = snap_tool_conf['es_port'],
 											connection_class = RequestsHttpConnection,
-											http_auth = (self.utils.decryptAES(self.snap_tool_conf['http_auth_user']).decode('utf-8'), self.utils.decryptAES(self.snap_tool_conf['http_auth_pass']).decode('utf-8')),
+											http_auth = (self.utils.decryptAES(snap_tool_conf['http_auth_user']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['http_auth_pass']).decode('utf-8')),
 											use_ssl = True,
 											verify_certs = False,
 											ssl_show_warn = False)
 				else:
-					context = create_default_context(cafile = self.snap_tool_conf['path_certificate'])
-					conn_es = Elasticsearch(self.snap_tool_conf['es_host'],
-											port = self.snap_tool_conf['es_port'],
+					context = create_default_context(cafile = snap_tool_conf['path_certificate'])
+					conn_es = Elasticsearch(snap_tool_conf['es_host'],
+											port = snap_tool_conf['es_port'],
 											connection_class = RequestsHttpConnection,
-											http_auth = (self.utils.decryptAES(self.snap_tool_conf['http_auth_user']).decode('utf-8'), self.utils.decryptAES(self.snap_tool_conf['http_auth_pass']).decode('utf-8')),
+											http_auth = (self.utils.decryptAES(snap_tool_conf['http_auth_user']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['http_auth_pass']).decode('utf-8')),
 											use_ssl = True,
 											verify_certs = True,
 											ssl_context = context)
 			if not conn_es == None:
-				self.logger.createSnapToolLog("Established connection with: " + self.snap_tool_conf['es_host'] + ':' + str(self.snap_tool_conf['es_port']), 1)
+				self.logger.createSnapToolLog("Established connection with: " + snap_tool_conf['es_host'] + ':' + str(snap_tool_conf['es_port']), 1)
 		except (KeyError, exceptions.ConnectionError, exceptions.AuthenticationException, exceptions.AuthorizationException, InvalidURL) as exception:
 			self.logger.createSnapToolLog(exception, 3)
 			self.form_dialog.d.msgbox(text = "\nFailed to connect to ElasticSearch. For more information, see the logs.", height = 8, width = 50, title = "Error Message")

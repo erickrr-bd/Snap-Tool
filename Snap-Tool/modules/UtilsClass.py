@@ -77,7 +77,7 @@ class Utils:
 		try:
 			with open(path_file_yaml, mode) as file_yaml:
 				data_file_yaml = safe_load(file_yaml)
-		except IOError as exception:
+		except (IOError, FileNotFoundError) as exception:
 			self.logger.createSnapToolLog(exception, 3)
 			self.form_dialog.d.msgbox(text = "\nError opening or reading the YAML file. For more information, see the logs.", height = 8, width = 50, title = "Error Message")
 			self.form_dialog.mainMenu()

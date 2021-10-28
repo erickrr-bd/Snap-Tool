@@ -359,11 +359,11 @@ class FormDialog:
 		if not path.exists(self.configuration.conf_file):
 			opt_conf_false = self.getDataRadioList("Select a option:", options_conf_false, "Configuration Options")
 			if opt_conf_false == "Create":
-				configuration.createConfiguration()
+				self.configuration.createConfiguration()
 		else:
 			opt_conf_true = self.getDataRadioList("Select a option:", options_conf_true, "Configuration Options")
 			if opt_conf_true == "Modify":
-				configuration.updateConfiguration()
+				self.configuration.updateConfiguration()
 
 	"""
 	Method that creates a repository of type FS in ElasticSearch.
