@@ -386,7 +386,7 @@ class FormDialog:
 					compress_repository = True
 				else:
 					compress_repository = False
-				snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
+				snap_tool_conf = self.utils.readYamlFile(self.configuration.conf_file, 'r')
 				conn_es = self.elastic.getConnectionElastic()
 				self.elastic.createRepositoryFS(conn_es, repository_name, path_repository, compress_repository)
 				message_create_repository = self.telegram.getMessageCreateRepository(repository_name, path_repository, compress_repository)
@@ -419,7 +419,7 @@ class FormDialog:
 				if len(list_aux_repositories) == 0:
 					self.d.msgbox(text = "\nThere are no repositories created.", height = 7, width = 50, title = "Notification Message")
 				else:
-					snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
+					snap_tool_conf = self.utils.readYamlFile(self.configuration.conf_file, 'r')
 					list_all_repositories = self.utils.convertListToCheckOrRadioList(list_aux_repositories, "Repository Name")
 					opt_repos = self.getDataCheckList("Select a option:", list_all_repositories, "Repositories")
 					confirm_delete_repos = self.getDataYesOrNo("\nAre you sure to delete the following repository(s)?", "Delete repositories")
@@ -464,7 +464,7 @@ class FormDialog:
 					if len(list_aux_repositories) == 0:
 						self.d.msgbox(text = "\nThere are no repositories.", height = 7, width = 50, title = "Notification Message")
 					else:
-						snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
+						snap_tool_conf = self.utils.readYamlFile(self.configuration.conf_file, 'r')
 						list_all_repositories = self.utils.convertListToCheckOrRadioList(list_aux_repositories, "Repository name")
 						opt_repo = self.getDataRadioList("Select a option:", list_all_repositories, "Repositories")
 						self.elastic.createSnapshot(conn_es, opt_repo, opt_index)
@@ -529,7 +529,7 @@ class FormDialog:
 					if len(list_aux_snapshots) == 0:
 						self.d.msgbox(text = "\nThere are no snapshots created.", height = 7, width = 50, title = "Notification Message")
 					else:
-						snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
+						snap_tool_conf = self.utils.readYamlFile(self.configuration.conf_file, 'r')
 						list_all_snapshots = self.utils.convertListToCheckOrRadioList(list_aux_snapshots, "Snapshot Name")
 						opt_snapshots = self.getDataCheckList("Select one or more options:", list_all_snapshots, "Snapshots")
 						delete_snapshot = self.getDataYesOrNo("\nAre you sure to delete the selected snapshot(s)?", "Delete Snapshot(s)")
@@ -573,7 +573,7 @@ class FormDialog:
 					if len(list_aux_snapshots) == 0:
 						self.d.msgbox(text = "\nThere are no snapshots created.", height = 7, width = 50, title = "Notification Message")
 					else:
-						snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
+						snap_tool_conf = self.utils.readYamlFile(self.configuration.conf_file, 'r')
 						list_all_snapshots = self.utils.convertListToCheckOrRadioList(list_aux_snapshots, "Snapshot Name")
 						opt_snapshot = self.getDataRadioList("Select a option:", list_all_snapshots, "Snapshots")
 						self.elastic.restoreSnapshot(conn_es, opt_repo, opt_snapshot)
@@ -613,7 +613,7 @@ class FormDialog:
 					if len(list_aux_snapshots) == 0:
 						self.d.msgbox(text = "\nThere are no snapshots created.", height = 7, width = 50, title = "Notification Message")
 					else:
-						snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
+						snap_tool_conf = self.utils.readYamlFile(self.configuration.conf_file, 'r')
 						list_all_snapshots = self.utils.convertListToCheckOrRadioList(list_aux_snapshots, "Snapshot Name")
 						opt_snapshot = self.getDataRadioList("Select a option:", list_all_snapshots, "Snapshots")
 						self.elastic.mountSearchableSnapshot(conn_es, opt_repo, opt_snapshot)
@@ -651,7 +651,7 @@ class FormDialog:
 					opt_indices = self.getDataCheckList("Select a option:", list_all_indices, "Indices")
 					confirm_delete_indices = self.getDataYesOrNo("\nAre you sure to delete the selected indices?", "Delete indices")
 					if confirm_delete_indices == "ok":
-						snap_tool_conf = self.utils.readYamlFile(self.path_conf_file, 'r')
+						snap_tool_conf = self.utils.readYamlFile(self.configuration.conf_file, 'r')
 						message_to_display = "\nIndices removed:\n"
 						for index_name in opt_indices:
 							self.elastic.deleteIndex(conn_es, index_name)
