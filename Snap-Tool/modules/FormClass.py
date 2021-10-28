@@ -39,10 +39,7 @@ class FormDialog:
 	"""
 	telegram = None
 
-	"""
-	Property that stores the path of the configuration file.
-	"""
-	path_conf_file = None
+	configuration = None
 
 	"""
 	Constructor for the FormDialog class.
@@ -56,8 +53,8 @@ class FormDialog:
 		self.utils = Utils(self)
 		self.elastic = Elastic(self)
 		self.telegram = Telegram(self)
+		self.configuration = Configuration(self)
 		self.d.set_background_title("SNAP-TOOL")
-		self.path_conf_file = self.utils.getPathSnapTool("conf") + "/snap_tool_conf.yaml"
 
 	"""
 	Method that generates the menu interface.
@@ -355,13 +352,11 @@ class FormDialog:
 	self -- An instantiated object of the FormDialog class.
 	"""
 	def defineConfiguration(self):
-		configuration = Configuration(self)
-
 		options_conf_false = [("Create", "Create the configuration file", 0)]
 
 		options_conf_true = [("Modify", "Modify the configuration file", 0)]
 
-		if not path.exists(self.path_conf_file):
+		if not path.exists(self.configuration.conf_file):
 			opt_conf_false = self.getDataRadioList("Select a option:", options_conf_false, "Configuration Options")
 			if opt_conf_false == "Create":
 				configuration.createConfiguration()
@@ -381,7 +376,7 @@ class FormDialog:
 	"""
 	def createRepository(self):
 		try:
-			if not path.exists(self.path_conf_file):
+			if not path.exists(self.configuration.conf_file):
 				self.d.msgbox(text = "\nConfiguration file not found.", height = 7, width = 50, title = "Error Message")
 			else:
 				repository_name = self.getDataInputText("Enter the name to be assigned to the repository:", "repository_name")
@@ -416,7 +411,7 @@ class FormDialog:
 	"""
 	def deleteRepository(self):
 		try:
-			if not path.exists(self.path_conf_file):
+			if not path.exists(self.configuration.conf_file):
 				self.d.msgbox(text = "\nConfiguration file not found.", height = 7, width = 50, title = "Error Message")
 			else:
 				conn_es = self.elastic.getConnectionElastic()
@@ -455,7 +450,7 @@ class FormDialog:
 	"""
 	def createSnapshot(self):
 		try:
-			if not path.exists(self.path_conf_file):
+			if not path.exists(self.configuration.conf_file):
 				self.d.msgbox(text = "\nConfiguration file not found.", height = 7, width = 50, title = "Error Message")
 			else:
 				conn_es = self.elastic.getConnectionElastic()
@@ -520,7 +515,7 @@ class FormDialog:
 	"""
 	def deleteSnapshot(self):
 		try:
-			if not path.exists(self.path_conf_file):
+			if not path.exists(self.configuration.conf_file):
 				self.d.msgbox(text = "\nConfiguration file not found.", height = 7, width = 50, title = "Error Message")
 			else:
 				conn_es = self.elastic.getConnectionElastic()
@@ -564,7 +559,7 @@ class FormDialog:
 	"""
 	def restoreSnapshot(self):
 		try:
-			if not path.exists(self.path_conf_file):
+			if not path.exists(self.configuration.conf_file):
 				self.d.msgbox(text = "\nConfiguration file not found.", height = 7, width = 50, title = "Error Message")
 			else:
 				conn_es = self.elastic.getConnectionElastic()
@@ -604,7 +599,7 @@ class FormDialog:
 	"""
 	def mountSearchableSnapshot(self):
 		try:
-			if not path.exists(self.path_conf_file):
+			if not path.exists(self.configuration.conf_file):
 				self.d.msgbox(text = "\nConfiguration file not found.", height = 7, width = 50, title = "Error Message")
 			else:
 				conn_es = self.elastic.getConnectionElastic()
@@ -644,7 +639,7 @@ class FormDialog:
 	"""
 	def deleteIndices(self):
 		try:
-			if not path.exists(self.path_conf_file):
+			if not path.exists(self.configuration.conf_file):
 				self.d.msgbox(text = "\nConfiguration file not found.", height = 7, width = 50, title = "Error Message")
 			else:
 				conn_es = self.elastic.getConnectionElastic()
