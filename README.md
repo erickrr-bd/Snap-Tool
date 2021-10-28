@@ -1,26 +1,35 @@
 # Snap-Tool v3.1
 
-Author: Erick Rodríguez erickrr.tbd93@gmail.com
+Author: Erick Rodríguez 
+
+Email: erickrr.tbd93@gmail.com, erodriguez@tekium.mx
 
 License: GPLv3
 
-Snap-Tool is a tool developed in Python, which allows the management of tasks related to ElasticSearch snapshots, through a graphical interface.
+Snap-Tool is an application developed in Python, which allows you to manage tasks related to repositories, snapshots and indexes in ElasticSearch, with the ability to alert via Telegram.
 
 # Applications
 ## Snap-Tool
-Graphic application from where all the management in relation to the ElasticSearch snapshots is carried out. It has the ability to alert via Telegram.
+Graphic application that allows the management of ElasticSearch repositories, snapshots and indexes.
 
 Characteristics:
-- The connection with ElasticSearch can be done through HTTPS and HTTP authentication (It must be configured in ElasticSearch).
 - Allows you to create and modify the Snap-Tool connection settings.
+- The connection with ElasticSearch can be done through HTTPS and HTTP authentication (It must be configured in ElasticSearch).
 - Encrypts sensitive data such as passwords so that they are not stored in plain text.
-- Allows you to create a snapshot of a particular index. Snap-Tool will send an alert when the process begins and when it ends, in order not to have to be aware of the process. Once the snapshot has been created, it allows you to decide whether or not to delete the stored index. In case of deleting it, an alert will be sent with the notification that the index was deleted.
-- Allows you to delete one or more snapshots created. An alert will be sent for each snapshot deleted.
-- Allows you to mount a snapshot as a searchable snapshot (enterprise license required). An alert is sent when this action is performed on a snapshot.
+- Allows you to create a repository to store snapshots (type FS).
+- Allows you to delete one or more repositories (type FS).
+- Allows you to create a snapshot of a specific index.
+- Allows you to delete one or more snapshots.
+- Allows you to restore a snapshot.
+- Allows you to mount a snapshot as a searchable snapshot (enterprise license required).
+- Allows you to delete one or more indexes.
+- It shows the percentage of disk space occupied by each of the nodes that make up the ElasticSearch cluster.
+- It does not allow operations on the indexes of the system, for security reasons.
+- Sending alerts to a Telegram channel of the operations carried out in the application.
 
 # Requirements
 - CentOS 8 (So far it has only been tested in this version)
-- ElasticSearch 7.x 
+- ElasticSearch 7.x
 - Enterprise license for Elastic Stack (searchable snapshots)
 - Python 3.6
 - Python Libraries
