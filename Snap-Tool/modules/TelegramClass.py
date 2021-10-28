@@ -83,7 +83,7 @@ class Telegram:
 		message += u'\u2611\uFE0F' + " Action: Repository created\n"
 		message += u'\u2611\uFE0F' + " Repository name: " + repository_name + '\n'
 		message += u'\u2611\uFE0F' + " Repository path: " + path_repository + '\n'
-		message += u'\u2611\uFE0F' + " Repository compression: " + compress_repository
+		message += u'\u2611\uFE0F' + " Repository compression: " + str(compress_repository)
 		return message
 
 	"""
@@ -108,15 +108,16 @@ class Telegram:
 	Parameters:
 	self -- An instantiated object of the Telegram class.
 	snapshot_name -- Name of the deleted snapshot.
+	repository_name -- Name of the repository where the snapshot was hosted.
 
 	Return:
 	message -- Message to send.
 	"""
-	def getMessageDeleteSnapshot(self, snapshot_name):
+	def getMessageDeleteSnapshot(self, snapshot_name, repository_name):
 		message = self.getHeaderMessage()
 		message += u'\u2611\uFE0F' + " Action: Snaphot removed\n"
 		message += u'\u2611\uFE0F' + " Snapshot name: " + snapshot_name + '\n'
-		message += u'\u2611\uFE0F' + " Index name: " + snapshot_name
+		message += u'\u2611\uFE0F' + " Repository name: " + repository_name
 		return message
 
 	"""

@@ -421,7 +421,7 @@ class FormDialog:
 				else:
 					snap_tool_conf = self.utils.readYamlFile(self.configuration.conf_file, 'r')
 					list_all_repositories = self.utils.convertListToCheckOrRadioList(list_aux_repositories, "Repository Name")
-					opt_repos = self.getDataCheckList("Select a option:", list_all_repositories, "Repositories")
+					opt_repos = self.getDataCheckList("Select one or more options:", list_all_repositories, "Repositories")
 					confirm_delete_repos = self.getDataYesOrNo("\nAre you sure to delete the following repository(s)?", "Delete repositories")
 					if confirm_delete_repos == "ok":
 						message_to_display = "\nDeleted repositories:\n\n"
@@ -536,7 +536,7 @@ class FormDialog:
 						if delete_snapshot == "ok":
 							for snapshot in opt_snapshots:
 								self.elastic.deleteSnapshotElastic(conn_es, opt_repo, snapshot)
-								message_delete_snapshot = self.telegram.getMessageDeleteSnapshot(snapshot)
+								message_delete_snapshot = self.telegram.getMessageDeleteSnapshot(snapshot, opt_repo)
 								self.telegram.sendTelegramAlert(self.utils.decryptAES(snap_tool_conf['telegram_chat_id']).decode('utf-8'), self.utils.decryptAES(snap_tool_conf['telegram_bot_token']).decode('utf-8'), message_delete_snapshot)
 							message = "\nThe following snapshots were removed:\n\n"
 							message += self.utils.convertListToString(opt_snapshots)
@@ -732,7 +732,7 @@ class FormDialog:
 		if option == 1:
 			self.createRepository()
 		elif option == 2:
-			self.deleteSnapshot()
+			self.deleteRepository()
 
 	"""
 	Method that launches an action based on the option chosen in the Snapshots menu.
