@@ -45,6 +45,11 @@ To install or update Snap-Tool, you must run the installer_snap_tool.sh executab
 - Copy and creation of directories and files necessary for the operation of Snap-Tool.
 - Creation of passphrase for the encryption and decryption of sensitive information, which is generated randomly, so it is unique for each installed Snap-Tool installation.
 
+# Execution
+The /etc/Snap-Tool path is accessed and the Snap_Tool.py binary is executed as follows:
+
+- python3 Snap_Tool.py or ./Snap_Tool.py
+
 # Commercial Support
 ![Tekium](https://github.com/unmanarc/uAuditAnalyzer2/blob/master/art/tekium_slogo.jpeg)
 
