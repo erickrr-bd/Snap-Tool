@@ -1,15 +1,15 @@
 #! /usr/bin/env python3
 
-from modules.FormClass import FormDialog
+from modules.Snap_Tool_Class import SnapTool
 
 """
-FormDialogs type object.
+Attribute that stores an object of the SnapTool class.
 """
-forms = FormDialog()
+snap_tool = SnapTool()
 
 """
 Main function of the application
 """
 if __name__ == "__main__":	
 	while True:
-		forms.mainMenu()
+		snap_tool.mainMenu()
