@@ -1,14 +1,12 @@
 #! /bin/bash
 
 clear
-echo -e "\e[96m2021@Tekium. All rights reserved.\e[0m"
-echo ''
-echo -e '\e[96mInstaller for Snap-Tool v3.1\e[0m'
-echo ''
-echo -e '\e[96mAuthor: Erick Rodríguez erickrr.tbd93@gmail.com\e[0m'
-echo ''
+echo -e '\e[1;33m--------------------------------------------------------------------------------\e[0m'
+echo -e '\e[96m2023@Tekium. All rights reserved.\e[0m'
+echo -e '\e[96mInstaller for Snap-Tool v3.3\e[0m'
+echo -e '\e[96mAuthor: Erick Rodríguez\e[0m'
+echo -e '\e[96mEmail: erodriguez@tekium.mx, \e[0m'
 echo -e '\e[96mLicense: GPLv3\e[0m'
-echo ''
 echo -e '\e[1;33m--------------------------------------------------------------------------------\e[0m'
 echo ''
 echo 'Do you want to install or update Snap-Tool on the computer (I/U)?'
@@ -38,8 +36,16 @@ if [ $opc = "I" ] || [ $opc = "i" ]; then
 		sleep 3
 		echo ''
 	fi
+	#Create user and group "snap_tool"
 	echo ''
-	echo -e '\e[96mCopying and creating the required directories for Snap-Tool...\e[0m'
+	echo -e '\e[96mCreating user and group "snap_tool"\e[0m'
+
+	echo ''
+	sleep 3
+	echo -e '\e[96m"snap_tool" user and group created\e[0m'
+	#Copy and creation of files and folders necesaries for Snap-Tool
+	echo ''
+	echo -e '\e[96mCopying and creating the required folders for Snap-Tool...\e[0m'
 	echo ''
 	dir=$(sudo pwd)
 	cp -r Snap-Tool /etc/
@@ -48,9 +54,9 @@ if [ $opc = "I" ] || [ $opc = "i" ]; then
 	echo -e '\e[96mDirectories copied and created...\e[0m'
 	sleep 3
 	echo ''
-	echo -e '\e[96mCreating passphrase...\e[0m'
-	passphrase=$(cat /dev/random | tr -dc '[:alpha:]' | head -c 30; echo)
-	cat << EOF > /etc/Snap-Tool/conf/key 
+	echo -e '\e[96mCreating passphrase\e[0m'
+	passphrase=$(cat /dev/urandom | head -n 30 | md5sum | head -c 30)
+	cat << EOF > /etc/Snap-Tool/configuration/key
 $passphrase
 EOF
 	echo ''

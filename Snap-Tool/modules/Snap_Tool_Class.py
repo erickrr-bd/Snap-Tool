@@ -6,11 +6,10 @@ from .Snap_Tool_Configuration_Class import SnapToolConfiguration
 
 class SnapTool:
 
-	__dialog = None
-
-	__constants = None
-
 	def __init__(self):
+		"""
+		Method that corresponds to the constructor of the class.
+		"""
 		self.__constants = Constants()
 		self.__dialog = libPyDialog(self.__constants.BACKTITLE, self.mainMenu)
 
@@ -23,14 +22,14 @@ class SnapTool:
 		self.__switchMainMenu(int(option_main_menu))
 
 
-	def __switchMainMenu(self, option):
+	def __switchMainMenu(self, option_main_menu):
 		"""
 		Method that executes a certain action based on the number of the option chosen in the "Main" menu.
 
-		:arg option (integer): Option number.
+		:arg option_main_menu (integer): Option number.
 		"""
-		if option == 1:
-			self.__defineSnapToolConfiguration()
+		if option_main_menu == 1:
+			self.__defineConfiguration()
 		"""
 		elif option == 2:
 			self.__alertRulesMenu()
@@ -46,18 +45,18 @@ class SnapTool:
 			exit(1)
 		"""
 
-	def __defineSnapToolConfiguration(self):
+	def __defineConfiguration(self):
 		"""
-		
+		Method that defines the actions to perform on the Snap-Tool configuration.
 		"""
 		snap_tool_configuration = SnapToolConfiguration(self.mainMenu)
-		if not path.exists(self.__constants.PATH_CONFIGURATION_FILE):
-			option_configuration_false = self.__dialog.createRadioListDialog("Select a option:", 8, 50, self.__constants.OPTIONS_CONFIGURATION_FALSE, "Configuration Options")
+		if not path.exists(self.__constants.PATH_SNAP_TOOL_CONFIGURATION_FILE):
+			option_configuration_false = self.__dialog.createRadioListDialog("Select a option:", 8, 50, self.__constants.OPTIONS_CONFIGURATION_FALSE, "Snap-Tool Configuration Options")
 			if option_configuration_false == "Create":
-				snap_tool_configuration.createSnapToolConfiguration()
+				snap_tool_configuration.createConfiguration()
 		else:
-			option_configuration_true = self.__dialog.createRadioListDialog("Select a option:", 10, 50, self.__constants.OPTIONS_CONFIGURATION_TRUE, "Configuration Options")
-			if option_configuration_true == "Modify":
-				snap_tool_configuration.modifySnapToolConfiguration()
-			elif option_configuration_true == "Show":
-				snap_tool_configuration.showSnapToolConfiguration()
+			option_configuration_true = self.__dialog.createRadioListDialog("Select a option:", 9, 50, self.__constants.OPTIONS_CONFIGURATION_TRUE, "Snap-Tool Configuration Options")
+			if option_configuration_true == "Update":
+				snap_tool_configuration.updateConfiguration()
+			elif option_configuration_true == "Display":
+				snap_tool_configuration.displayConfigurationData()
