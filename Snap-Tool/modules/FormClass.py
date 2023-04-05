@@ -649,7 +649,7 @@ class FormDialog:
 				else:
 					list_all_indices = self.utils.convertListToCheckOrRadioList(list_aux_indices, "Index name")
 					opt_indices = self.getDataCheckList("Select a option:", list_all_indices, "Indices")
-					confirm_delete_indices = self.getDataYesOrNo("\nAre you sure to delete the selected indices?", "Delete indices")
+					confirm_delete_indices = self.getDataYesOrNo("\nAre you sure to delete the selected indices?", 7, 50, "Delete indices")
 					if confirm_delete_indices == "ok":
 						snap_tool_conf = self.utils.readYamlFile(self.configuration.conf_file, 'r')
 						message_to_display = "\nIndices removed:\n"

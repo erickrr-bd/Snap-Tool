@@ -139,3 +139,15 @@ class Constants:
 	Options displayed when automatic index removal is disabled
 	"""
 	OPTIONS_DELETE_INDEX_FALSE = [("Enable", "Enable automatic index removal", 0)]
+
+	"""
+	Options displayed in the "Indexes" menu.
+	"""
+	OPTIONS_INDEXES_MENU = [("1", "Delete Indexes")]
+
+	"""
+	Options displayed in the "Snapshots" menu.
+	"""
+	OPTIONS_SNAPSHOTS_MENU = [("1", "Create Snapshot"),
+							  ("2", "Delete Snapshots"),
+							  ("3", "Restore Snapshot")]
