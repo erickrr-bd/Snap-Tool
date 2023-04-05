@@ -3,14 +3,18 @@ from sys import exit
 from .Indexes_Class import Indexes
 from libPyDialog import libPyDialog
 from .Constants_Class import Constants
+from .Snapshots_Class import Snapshots
 from .Nodes_Information_Class import NodesInformation
 from .Snap_Tool_Configuration_Class import SnapToolConfiguration
 
+"""
+Class that manages the operation of Snap-Tool.
+"""
 class SnapTool:
 
 	def __init__(self):
 		"""
-		Method that corresponds to the constructor of the class.
+		Class constructor.
 		"""
 		self.__constants = Constants()
 		self.__dialog = libPyDialog(self.__constants.BACKTITLE, self.mainMenu)
@@ -18,7 +22,7 @@ class SnapTool:
 
 	def mainMenu(self):
 		"""
-		Method that shows the "Main" menu.
+		Method that displays the "Main" menu.
 		"""
 		option_main_menu = self.__dialog.createMenuDialog("Select a option:", 14, 50, self.__constants.OPTIONS_MAIN_MENU, "Main Menu")
 		self.__switchMainMenu(int(option_main_menu))
@@ -26,7 +30,7 @@ class SnapTool:
 
 	def __indexesMenu(self):
 		"""
-		Method that shows the "Indexes" menu.
+		Method that displays the "Indexes" menu.
 		"""
 		option_indexes_menu = self.__dialog.createMenuDialog("Select a option:", 8, 50, self.__constants.OPTIONS_INDEXES_MENU, "Indexes Menu")
 		self.__switchIndexesMenu(int(option_indexes_menu))
@@ -34,7 +38,7 @@ class SnapTool:
 
 	def __snapshotsMenu(self):
 		"""
-		Method that shows the "Snapshots" menu.
+		Method that displays the "Snapshots" menu.
 		"""
 		option_snapshots_menu = self.__dialog.createMenuDialog("Select a option:", 10, 50, self.__constants.OPTIONS_SNAPSHOTS_MENU, "Snapshots Menu")
 
@@ -63,12 +67,22 @@ class SnapTool:
 
 
 	def __switchIndexesMenu(self, option_indexes_menu):
+		"""
+		Method that executes a certain action based on the number of the option chosen in the "Main" menu.
+
+		:arg option_main_menu (integer): Option number.
+		"""
 		indexes = Indexes(self.mainMenu)
 		if option_indexes_menu == 1:
 			indexes.deleteIndexes()
 
 
 	def __switchSnapshotsMenu(self, option_snapshots_menu):
+		"""
+		Method that executes a certain action based on the number of the option chosen in the "Main" menu.
+
+		:arg option_main_menu (integer): Option number.
+		"""
 		if option_snapshots_menu == 1:
 			indexes.deleteIndexes()
 
@@ -92,7 +106,7 @@ class SnapTool:
 
 	def __showAboutApplication(self):
 		"""
-		Method that displays a message on the screen with information about the application.
+		Method that displays information about the application
 		"""
 		message_to_display = "\nCopyright@2023 Tekium. All rights reserved.\nSnap-Tool v3.3\nAuthor: Erick Rodríguez\nEmail: erickrr.tbd93@gmail.com, erodriguez@tekium.mx\n" + "License: GPLv3\n\nEasy management of snapshots, repositories and indexes\nwith ElasticSearch and Python."
 		self.__dialog.createScrollBoxDialog(message_to_display, 14, 60, "About")

@@ -13,10 +13,11 @@ class Indexes:
 
 	def __init__(self, action_to_cancel):
 		"""
-		Method that corresponds to the constructor of the class.
+		Class constructor.
 
-		:arg action_to_cancel (object): Method to be called when the user chooses the cancel option.
+		:arg action_to_cancel (object): Method that is executed when the cancel option is selected.
 		"""
+		self.__logger = libPyLog()
 		self.__utils = libPyUtils()
 		self.__constants = Constants()
 		self.__elasticsearch = libPyElk()
@@ -27,6 +28,7 @@ class Indexes:
 
 	def deleteIndexes(self):
 		"""
+		Method that removes one or more indexes.
 		"""
 		try:
 			snap_tool_data = self.__utils.readYamlFile(self.__constants.PATH_SNAP_TOOL_CONFIGURATION_FILE)
@@ -53,10 +55,11 @@ class Indexes:
 						telegram_chat_id = self.__utils.decryptDataWithAES(snap_tool_data["telegram_chat_id"], passphrase).decode("utf-8")
 						for index_name in options_delete_indexes:
 							self.__elasticsearch.deleteIndex(conn_es, index_name)
-							message_telegram = self.__generateTelegramMessage(index_name)
 							self.__logger.generateApplicationLog("Index deleted: " + index_name, 2, "__deleteIndexes", use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG)
+							message_telegram = self.__generateTelegramMessage(index_name)
 							response_http_code = self.__telegram.sendMessageTelegram(telegram_bot_token, telegram_chat_id, message_telegram)
 							self.__createLogByTelegramCode(response_http_code)
+						self.__dialog.createMessageDialog("\nIndexes removed.", 7, 50, "Notification Message")
 					else:
 						self.__dialog.createMessageDialog("\nError deleting selected indexes. Authentication Error.", 8, 50, "Error Message")
 			else:
@@ -70,9 +73,11 @@ class Indexes:
 
 	def __generateTelegramMessage(self, index_name):
 		"""
-		Method that creates a log based on the HTTP code received as a response.
+		Method that generates the message to be sent via Telegram.
+
+		Returns the message to send.
 		
-		:arg response_http_code (string): HTTP code received in the response when sending the alert to Telegram.
+		:arg index_name (string): Index name.
 		"""
 		message_telegram = u'\u26A0\uFE0F' + " " + "Snap-Tool" +  " " + u'\u26A0\uFE0F' + "\n\n" + u'\u23F0' + " Alert sent: " + strftime("%c") + "\n\n\n"
 		message_telegram += u'\u2611\uFE0F' + " Action: Index removed\n"
@@ -82,9 +87,9 @@ class Indexes:
 
 	def __createLogByTelegramCode(self, response_http_code):
 		"""
-		Method that creates a log based on the HTTP code received as a response.
+		Method that creates a log based on the received HTTP code.
 		
-		:arg response_http_code (integer): HTTP code received in the response when sending the alert to Telegram.
+		:arg response_http_code (integer): HTTP response code.
 		"""
 		if response_http_code == 200:
 			self.__logger.generateApplicationLog("Telegram message sent.", 1, "__sendTelegramMessage", use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG)
