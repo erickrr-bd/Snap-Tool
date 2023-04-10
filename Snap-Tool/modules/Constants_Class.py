@@ -141,6 +141,12 @@ class Constants:
 	OPTIONS_DELETE_INDEX_FALSE = [("Enable", "Enable automatic index removal", 0)]
 
 	"""
+	Options displayed in the "Repositories" menu.
+	"""
+	OPTIONS_REPOSITORIES_MENU = [("1", "Create Repository"),
+							     ("2", "Delete Repositories")]
+
+	"""
 	Options displayed in the "Indexes" menu.
 	"""
 	OPTIONS_INDEXES_MENU = [("1", "Delete Indexes")]

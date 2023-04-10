@@ -4,6 +4,7 @@ from .Indexes_Class import Indexes
 from libPyDialog import libPyDialog
 from .Constants_Class import Constants
 from .Snapshots_Class import Snapshots
+from .Repositories_Class import Repositories
 from .Nodes_Information_Class import NodesInformation
 from .Snap_Tool_Configuration_Class import SnapToolConfiguration
 
@@ -28,12 +29,12 @@ class SnapTool:
 		self.__switchMainMenu(int(option_main_menu))
 
 
-	def __indexesMenu(self):
+	def __repositoriesMenu(self):
 		"""
-		Method that displays the "Indexes" menu.
+		Method that displays the "Repositories" menu.
 		"""
-		option_indexes_menu = self.__dialog.createMenuDialog("Select a option:", 8, 50, self.__constants.OPTIONS_INDEXES_MENU, "Indexes Menu")
-		self.__switchIndexesMenu(int(option_indexes_menu))
+		option_repositories_menu = self.__dialog.createMenuDialog("Select a option:", 9, 50, self.__constants.OPTIONS_REPOSITORIES_MENU, "Repositories Menu")
+		self.__switchRepositoriesMenu(int(option_repositories_menu))
 
 
 	def __snapshotsMenu(self):
@@ -44,6 +45,14 @@ class SnapTool:
 		self.__switchSnapshotsMenu(int(option_snapshots_menu))
 
 
+	def __indexesMenu(self):
+		"""
+		Method that displays the "Indexes" menu.
+		"""
+		option_indexes_menu = self.__dialog.createMenuDialog("Select a option:", 8, 50, self.__constants.OPTIONS_INDEXES_MENU, "Indexes Menu")
+		self.__switchIndexesMenu(int(option_indexes_menu))
+
+
 	def __switchMainMenu(self, option_main_menu):
 		"""
 		Method that executes an action based on the option selected in the "Main" menu.
@@ -52,8 +61,8 @@ class SnapTool:
 		"""
 		if option_main_menu == 1:
 			self.__defineConfiguration()
-		#elif option_main_menu == 2:
-		#	self.__alertRulesMenu()
+		elif option_main_menu == 2:
+			self.__repositoriesMenu()
 		elif option_main_menu == 3:
 			self.__snapshotsMenu()
 		elif option_main_menu == 4:
@@ -67,15 +76,17 @@ class SnapTool:
 			exit(1)
 
 
-	def __switchIndexesMenu(self, option_indexes_menu):
+	def __switchRepositoriesMenu(self, option_repositories_menu):
 		"""
-		Method that executes an action based on the option selected in the "Indexes" menu.
+		Method that executes an action based on the option selected in the "Repositories" menu.
 
-		:arg option_indexes_menu (integer): Chosen option.
+		:arg option_repositories_menu (integer): Chosen option.
 		"""
-		indexes = Indexes(self.mainMenu)
-		if option_indexes_menu == 1:
-			indexes.deleteIndexes()
+		repositories = Repositories(self.mainMenu)
+		if option_repositories_menu == 1:
+			repositories.createRepository()
+		elif option_repositories_menu == 2:
+			repositories.deleteRepositories()
 
 
 	def __switchSnapshotsMenu(self, option_snapshots_menu):
@@ -93,6 +104,17 @@ class SnapTool:
 			snapshots.restoreSnapshot()
 		elif option_snapshots_menu == 4:
 			snapshots.mountSearchableSnapshot()
+
+
+	def __switchIndexesMenu(self, option_indexes_menu):
+		"""
+		Method that executes an action based on the option selected in the "Indexes" menu.
+
+		:arg option_indexes_menu (integer): Chosen option.
+		"""
+		indexes = Indexes(self.mainMenu)
+		if option_indexes_menu == 1:
+			indexes.deleteIndexes()
 
 
 	def __defineConfiguration(self):

@@ -114,6 +114,38 @@ class TelegramMessages:
 		return message_telegram
 
 
+	def createRepositoryMessage(self, repository_name, path_repository, use_compress_repository):
+		"""
+		Method that generates the message to send when a snapshot is deleted.
+
+		Returns the message to send.
+		
+		:arg repository_name (string): Repository name.
+		:arg path_repository (string): Repository path.
+		:arg use_compress_repository (boolean): Whether or not to compress the metadata in the repository.
+		"""
+		message_telegram = u'\u26A0\uFE0F' + " Snap-Tool " + u'\u26A0\uFE0F' + "\n\n" + u'\u23F0' + " Alert sent: " + strftime("%c") + "\n\n\n"
+		message_telegram += u'\u2611\uFE0F' + " Action: Repository created\n"
+		message_telegram += u'\u2611\uFE0F' + " Repository Name: " + repository_name + '\n'
+		message_telegram += u'\u2611\uFE0F' + " Repository Path: " + path_repository + '\n'
+		message_telegram += u'\u2611\uFE0F' + " Repository Compression: " + str(use_compress_repository)
+		return message_telegram
+
+
+	def deleteRepositoryMessage(self, repository_name):
+		"""
+		Method that generates the message to send when a repository is deleted.
+
+		Returns the message to send.
+		
+		:arg repository_name (string): Repository name.
+		"""
+		message_telegram = u'\u26A0\uFE0F' + " Snap-Tool " + u'\u26A0\uFE0F' + "\n\n" + u'\u23F0' + " Alert sent: " + strftime("%c") + "\n\n\n"
+		message_telegram += u'\u2611\uFE0F' + " Action: Repository deleted\n"
+		message_telegram += u'\u2611\uFE0F' + " Repository Name: " + repository_name
+		return message_telegram
+
+
 	def createLogByTelegramCode(self, response_http_code):
 		"""
 		Method that creates a log based on the received HTTP code.
