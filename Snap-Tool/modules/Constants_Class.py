@@ -150,4 +150,5 @@ class Constants:
 	"""
 	OPTIONS_SNAPSHOTS_MENU = [("1", "Create Snapshot"),
 							  ("2", "Delete Snapshots"),
-							  ("3", "Restore Snapshot")]
+							  ("3", "Restore Snapshot"),
+							  ("4", "Mount Searchable Snapshot")]

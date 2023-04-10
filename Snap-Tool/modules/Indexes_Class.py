@@ -5,6 +5,7 @@ from libPyUtils import libPyUtils
 from libPyDialog import libPyDialog
 from .Constants_Class import Constants
 from libPyTelegram import libPyTelegram
+from .Telegram_Messages_Class import TelegramMessages
 
 """
 Class that manages ElasticSearch indexes.
@@ -22,6 +23,7 @@ class Indexes:
 		self.__constants = Constants()
 		self.__elasticsearch = libPyElk()
 		self.__telegram = libPyTelegram()
+		self.__messages = TelegramMessages()
 		self.__action_to_cancel = action_to_cancel
 		self.__dialog = libPyDialog(self.__constants.BACKTITLE, action_to_cancel)
 
@@ -50,52 +52,22 @@ class Indexes:
 					passphrase = self.__utils.getPassphraseKeyFile(self.__constants.PATH_KEY_FILE)
 					password_privileged_actions = self.__dialog.createPasswordBoxDialog("Enter the password for privileged actions:", 8, 50, "password", True)
 					if password_privileged_actions == self.__utils.decryptDataWithAES(snap_tool_data["password_privileged_actions"], passphrase).decode("utf-8"):
-						passphrase = self.__utils.getPassphraseKeyFile(self.__constants.PATH_KEY_FILE)
 						telegram_bot_token = self.__utils.decryptDataWithAES(snap_tool_data["telegram_bot_token"], passphrase).decode("utf-8")
 						telegram_chat_id = self.__utils.decryptDataWithAES(snap_tool_data["telegram_chat_id"], passphrase).decode("utf-8")
 						for index_name in options_delete_indexes:
 							self.__elasticsearch.deleteIndex(conn_es, index_name)
 							self.__logger.generateApplicationLog("Index deleted: " + index_name, 2, "__deleteIndexes", use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG)
-							message_telegram = self.__generateTelegramMessage(index_name)
+							message_telegram = self.__messages.indexRemovedMessage(index_name)
 							response_http_code = self.__telegram.sendMessageTelegram(telegram_bot_token, telegram_chat_id, message_telegram)
-							self.__createLogByTelegramCode(response_http_code)
+							self.__messages.createLogByTelegramCode(response_http_code)
 						self.__dialog.createMessageDialog("\nIndexes removed.", 7, 50, "Notification Message")
 					else:
-						self.__dialog.createMessageDialog("\nError deleting selected indexes. Authentication Error.", 8, 50, "Error Message")
+						self.__dialog.createMessageDialog("\nError deleting selected indexes. Authentication Error.", 8, 50, "Notification Message")
 			else:
 				self.__dialog.createMessageDialog("\nNo indexes found.", 7, 50, "Notification Message")
+			conn_es.transport.close()
 		except Exception as exception:
 			self.__dialog.createMessageDialog("\nError deleting ElasticSearch indexes. For more information, see the logs.", 8, 50, "Error Message")
 			self.__logger.generateApplicationLog(exception, 3, "__deleteIndexes", use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG)
 		finally:
 			self.__action_to_cancel()
-
-
-	def __generateTelegramMessage(self, index_name):
-		"""
-		Method that generates the message to be sent via Telegram.
-
-		Returns the message to send.
-		
-		:arg index_name (string): Index name.
-		"""
-		message_telegram = u'\u26A0\uFE0F' + " " + "Snap-Tool" +  " " + u'\u26A0\uFE0F' + "\n\n" + u'\u23F0' + " Alert sent: " + strftime("%c") + "\n\n\n"
-		message_telegram += u'\u2611\uFE0F' + " Action: Index removed\n"
-		message_telegram += u'\u2611\uFE0F' + " Index Name: " + index_name
-		return message_telegram
-
-
-	def __createLogByTelegramCode(self, response_http_code):
-		"""
-		Method that creates a log based on the received HTTP code.
-		
-		:arg response_http_code (integer): HTTP response code.
-		"""
-		if response_http_code == 200:
-			self.__logger.generateApplicationLog("Telegram message sent.", 1, "__sendTelegramMessage", use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG)
-		elif response_http_code == 400:
-			self.__logger.generateApplicationLog("Telegram message not sent. Status: Bad request.", 3, "__sendTelegramMessage", use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG)
-		elif response_http_code == 401:
-			self.__logger.generateApplicationLog("Telegram message not sent. Status: Unauthorized.", 3, "__sendTelegramMessage", use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG)
-		elif response_http_code == 404:
-			self.__logger.generateApplicationLog("Telegram message not sent. Status: Not found.", 3, "__sendTelegramMessage", use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG)

@@ -40,18 +40,19 @@ class SnapTool:
 		"""
 		Method that displays the "Snapshots" menu.
 		"""
-		option_snapshots_menu = self.__dialog.createMenuDialog("Select a option:", 10, 50, self.__constants.OPTIONS_SNAPSHOTS_MENU, "Snapshots Menu")
+		option_snapshots_menu = self.__dialog.createMenuDialog("Select a option:", 11, 50, self.__constants.OPTIONS_SNAPSHOTS_MENU, "Snapshots Menu")
+		self.__switchSnapshotsMenu(int(option_snapshots_menu))
 
 
 	def __switchMainMenu(self, option_main_menu):
 		"""
-		Method that executes a certain action based on the number of the option chosen in the "Main" menu.
+		Method that executes an action based on the option selected in the "Main" menu.
 
-		:arg option_main_menu (integer): Option number.
+		:arg option_main_menu (integer): Chosen option.
 		"""
 		if option_main_menu == 1:
 			self.__defineConfiguration()
-		#elif option == 2:
+		#elif option_main_menu == 2:
 		#	self.__alertRulesMenu()
 		elif option_main_menu == 3:
 			self.__snapshotsMenu()
@@ -68,9 +69,9 @@ class SnapTool:
 
 	def __switchIndexesMenu(self, option_indexes_menu):
 		"""
-		Method that executes a certain action based on the number of the option chosen in the "Main" menu.
+		Method that executes an action based on the option selected in the "Indexes" menu.
 
-		:arg option_main_menu (integer): Option number.
+		:arg option_indexes_menu (integer): Chosen option.
 		"""
 		indexes = Indexes(self.mainMenu)
 		if option_indexes_menu == 1:
@@ -79,12 +80,19 @@ class SnapTool:
 
 	def __switchSnapshotsMenu(self, option_snapshots_menu):
 		"""
-		Method that executes a certain action based on the number of the option chosen in the "Main" menu.
+		Method that executes an action based on the option selected in the "Snapshots" menu.
 
-		:arg option_main_menu (integer): Option number.
+		:arg option_snapshots_menu (integer): Chosen option.
 		"""
+		snapshots = Snapshots(self.mainMenu)
 		if option_snapshots_menu == 1:
-			indexes.deleteIndexes()
+			snapshots.createSnapshot()
+		elif option_snapshots_menu == 2:
+			snapshots.deleteSnapshots()
+		elif option_snapshots_menu == 3:
+			snapshots.restoreSnapshot()
+		elif option_snapshots_menu == 4:
+			snapshots.mountSearchableSnapshot()
 
 
 	def __defineConfiguration(self):
