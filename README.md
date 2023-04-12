@@ -1,4 +1,4 @@
-# Snap-Tool v3.1
+# Snap-Tool v3.3
 
 Author: Erick Rodríguez 
 
@@ -6,7 +6,7 @@ Email: erickrr.tbd93@gmail.com, erodriguez@tekium.mx
 
 License: GPLv3
 
-Snap-Tool is an application developed in Python, which allows you to manage tasks related to repositories, snapshots and indexes in ElasticSearch, with the ability to alert via Telegram.
+Snap-Tool allows the management of ElasticSearch repositories, snapshots and indexes in an easy and graphical way.
 
 # Applications
 ## Snap-Tool
