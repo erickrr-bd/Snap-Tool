@@ -40,14 +40,16 @@ Characteristics:
   - libPyUtils (https://github.com/erickrr-bd/libPyUtils)
 
 # Installation
-To install or update Snap-Tool, you must run the installer_snap_tool.sh executable with administrator rights. The installer will perform the following actions:
-- Copy and creation of directories and files necessary for the operation of Snap-Tool.
-- Creation of passphrase for the encryption and decryption of sensitive information, which is generated randomly, so it is unique for each installed Snap-Tool installation.
+To install or update Snap-Tool, the installer must be executed, for this it must be executed as follows:
+
+`./installer_snap_tool.sh`
+
+Note: You just have to follow the instructions that appear on the screen and choose the desired options.
 
 # Execution
 To run Snap-Tool, run the following command (creation of the alias is required):
 
-- Snap-Tool
+`Snap-Tool`
 
 # Commercial Support
 ![Tekium](https://github.com/unmanarc/uAuditAnalyzer2/blob/master/art/tekium_slogo.jpeg)
