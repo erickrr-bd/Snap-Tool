@@ -28,17 +28,15 @@ Characteristics:
 - Sending alerts to a Telegram channel of the operations carried out in the application.
 
 # Requirements
-- CentOS 8 (So far it has only been tested in this version)
-- ElasticSearch 7.x
-- Enterprise license for Elastic Stack (searchable snapshots)
+- CentOS 8 or Rocky Linux 8
+- ElasticSearch 7.x 
 - Python 3.6
 - Python Libraries
-  - elasticsearch-dsl
-  - requests
-  - pycurl
-  - pythondialog
-  - pycryptodome
-  - pyyaml
+  - libPyDialog (https://github.com/erickrr-bd/libPyDialog)
+  - libPyElk (https://github.com/erickrr-bd/libPyElk)
+  - libPyTelegram (https://github.com/erickrr-bd/libPyTelegram)
+  - libPyLog (https://github.com/erickrr-bd/libPyLog)
+  - libPyUtils (https://github.com/erickrr-bd/libPyUtils)
 
 # Installation
 To install or update Snap-Tool, you must run the installer_snap_tool.sh executable with administrator rights. The installer will perform the following actions:
@@ -48,7 +46,7 @@ To install or update Snap-Tool, you must run the installer_snap_tool.sh executab
 # Execution
 The /etc/Snap-Tool path is accessed and the Snap_Tool.py binary is executed as follows:
 
-- python3 Snap_Tool.py or ./Snap_Tool.py
+- Snap-Tool
 
 # Commercial Support
 ![Tekium](https://github.com/unmanarc/uAuditAnalyzer2/blob/master/art/tekium_slogo.jpeg)
