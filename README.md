@@ -10,22 +10,23 @@ Snap-Tool allows the management of ElasticSearch repositories, snapshots and ind
 
 # Applications
 ## Snap-Tool
-Graphic application that allows the management of ElasticSearch repositories, snapshots and indexes.
 
 Characteristics:
-- Allows you to create and modify the Snap-Tool connection settings.
-- The connection with ElasticSearch can be done through HTTPS and HTTP authentication (It must be configured in ElasticSearch).
-- Encrypts sensitive data such as passwords so that they are not stored in plain text.
-- Allows you to create a repository to store snapshots (type FS).
-- Allows you to delete one or more repositories (type FS).
-- Allows you to create a snapshot of a specific index.
-- Allows you to delete one or more snapshots.
-- Allows you to restore a snapshot.
-- Allows you to mount a snapshot as a searchable snapshot (enterprise license required).
-- Allows you to delete one or more indexes.
-- It shows the percentage of disk space occupied by each of the nodes that make up the ElasticSearch cluster.
-- It does not allow operations on the indexes of the system, for security reasons.
-- Sending alerts to a Telegram channel of the operations carried out in the application.
+- Create, modify and display Snap-Tool settings.
+- The connection to ElasticSearch can be via HTTPS or HTTP.
+- When using HTTPS, you have the option to verify or not verify the SSL certificate.
+- For the connection with ElasticSearch an authentication method can be used (HTTP Authentication or API key).
+- Passphrase generation during the installation process, so it is different in each implementation.
+- Encrypts sensitive data, such as passwords.
+- Requests a password (defined during the configuration process) for privileged actions. For example, when an index is deleted.
+- Create and delete repositories (FS type).
+- Create and delete snapshots.
+- Restore snapshots.
+- Mount snapshots as searchable snapshots (enterprise license required).
+- Delete indexes.
+- Shows the percentage of disk used by each of the cluster nodes.
+- Sending alerts via Telegram for each action taken.
+- Generation of application logs.
 
 # Requirements
 - CentOS 8 or Rocky Linux 8
@@ -44,7 +45,7 @@ To install or update Snap-Tool, you must run the installer_snap_tool.sh executab
 - Creation of passphrase for the encryption and decryption of sensitive information, which is generated randomly, so it is unique for each installed Snap-Tool installation.
 
 # Execution
-The /etc/Snap-Tool path is accessed and the Snap_Tool.py binary is executed as follows:
+To run Snap-Tool, run the following command (creation of the alias is required):
 
 - Snap-Tool
 
