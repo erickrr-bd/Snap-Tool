@@ -1,104 +1,117 @@
+"""
+Class that manages everything related to Repositories.
+"""
+from os import path
 from libPyElk import libPyElk
 from libPyLog import libPyLog
+from dataclasses import dataclass
 from libPyUtils import libPyUtils
 from libPyDialog import libPyDialog
 from .Constants_Class import Constants
 from libPyTelegram import libPyTelegram
+from libPyConfiguration import libPyConfiguration
 from .Telegram_Messages_Class import TelegramMessages
 
-"""
-Class that manages the ElasticSearch repositories.
-"""
+@dataclass
 class Repositories:
 
-	def __init__(self, action_to_cancel):
+	def __init__(self) -> None:
 		"""
 		Class constructor.
-
-		:arg action_to_cancel (object): Method that is executed when the cancel option is selected.
 		"""
-		self.__logger = libPyLog()
-		self.__utils = libPyUtils()
-		self.__constants = Constants()
-		self.__elasticsearch = libPyElk()
-		self.__telegram = libPyTelegram()
-		self.__messages = TelegramMessages()
-		self.__action_to_cancel = action_to_cancel
-		self.__dialog = libPyDialog(self.__constants.BACKTITLE, action_to_cancel)
+		self.logger = libPyLog()
+		self.utils = libPyUtils()
+		self.constants = Constants()
+		self.elasticsearch = libPyElk()
+		self.telegram = libPyTelegram()
+		self.telegram_messages = TelegramMessages()
+		self.dialog = libPyDialog(self.constants.BACKTITLE)
 
 
-	def createRepository(self):
+	def create_repository(self) -> None:
 		"""
-		Method that creates an ElasticSearch repository.
+		Method that creates a repository.
 		"""
 		try:
-			snap_tool_data = self.__utils.readYamlFile(self.__constants.PATH_SNAP_TOOL_CONFIGURATION_FILE)
-			if snap_tool_data["use_authentication_method"] == True:
-				if snap_tool_data["authentication_method"] == "API Key":
-					conn_es = self.__elasticsearch.createConnectionToElasticSearchAPIKey(snap_tool_data, self.__constants.PATH_KEY_FILE)
-				elif snap_tool_data["authentication_method"] == "HTTP Authentication":
-					conn_es = self.__elasticsearch.createConnectionToElasticSearchHTTPAuthentication(snap_tool_data, self.__constants.PATH_KEY_FILE)
+			if path.exists(self.constants.ES_CONFIGURATION):
+				configuration = libPyConfiguration()
+				data = self.utils.read_yaml_file(self.constants.ES_CONFIGURATION)
+				configuration.convert_dict_to_object(data)
+				if configuration.use_authentication:
+					if configuration.authentication_method == "HTTP Authentication":
+						conn_es = self.elasticsearch.create_connection_http_auth(configuration, self.constants.KEY_FILE)
+					elif configuration.authentication_method == "API Key":
+						conn_es = self.elasticsearch.create_connection_api_key(configuration, self.constants.KEY_FILE)
+				else:
+					conn_es = self.elasticsearch.create_connection_without_auth(configuration)
+				if path.exists(self.constants.SNAP_TOOL_CONFIGURATION):
+					snap_tool_data = self.utils.read_yaml_file(self.constants.SNAP_TOOL_CONFIGURATION)
+					passphrase = self.utils.get_passphrase(self.constants.KEY_FILE)
+					telegram_bot_token = self.utils.decrypt_data(snap_tool_data["telegram_bot_token"], passphrase).decode("utf-8")
+					telegram_chat_id = self.utils.decrypt_data(snap_tool_data["telegram_chat_id"], passphrase).decode("utf-8")
+					repository_name = self.dialog.create_inputbox("Enter the repository's name:", 8, 50, "prueba")
+					repository_path = self.dialog.select_directory("/etc", 8, 50, "Repository's Path")
+					compress_repository = self.dialog.create_yes_or_no("\nAre metadata files required to be stored compressed?", 8, 50, "Compress Repository")
+					compress_repository = True if compress_repository == "ok" else False
+					self.elasticsearch.create_repository(conn_es, repository_name, repository_path, compress_repository)
+					self.logger.create_log(f"Repository created: {repository_name}", 2, "_createRepository", use_file_handler = True, file_name = self.constants.LOG_FILE)
+					telegram_message = self.telegram_messages.generate_create_repository_message(repository_name, repository_path, compress_repository)
+					response_http_code = self.telegram.send_telegram_message(telegram_bot_token, telegram_chat_id, telegram_message)
+					self.telegram_messages.create_log_by_telegram_code(response_http_code)
+					self.dialog.create_message(f"\nRepository created: {repository_name}", 7, 50, "Notification Message")
+				else:
+					self.dialog.create_message("\nSnap-Tool Configuration file not found.", 7, 50, "Error Message")
+				conn_es.transport.close()
 			else:
-				conn_es = self.__elasticsearch.createConnectionToElasticSearchWithoutAuthentication(snap_tool_data)
-			passphrase = self.__utils.getPassphraseKeyFile(self.__constants.PATH_KEY_FILE)
-			telegram_bot_token = self.__utils.decryptDataWithAES(snap_tool_data["telegram_bot_token"], passphrase).decode("utf-8")
-			telegram_chat_id = self.__utils.decryptDataWithAES(snap_tool_data["telegram_chat_id"], passphrase).decode("utf-8")
-			repository_name = self.__dialog.createInputBoxDialog("Enter the repository name:", 8, 50, "repository_name")
-			path_repository = self.__dialog.createFolderDialog("/etc/Snap-Tool/configuration", 8, 50, "Path Repository")
-			use_compress_repository = self.__dialog.createYesOrNoDialog("\nDo you require metadata files to be stored compressed?", 8, 50, "Compress Repository")
-			use_compress_repository = True if use_compress_repository == "ok" else False
-			self.__elasticsearch.createRepository(conn_es, repository_name, path_repository, use_compress_repository)
-			message_telegram = self.__messages.createRepositoryMessage(repository_name, path_repository, use_compress_repository)
-			response_http_code = self.__telegram.sendMessageTelegram(telegram_bot_token, telegram_chat_id, message_telegram)
-			self.__messages.createLogByTelegramCode(response_http_code)
-			conn_es.transport.close()
+				self.dialog.create_message("\nES Configuration file not found.", 7, 50, "Error Message")
 		except Exception as exception:
-			self.__dialog.createMessageDialog("\nError creating repository. For more information, see the logs.", 8, 50, "Error Message")
-			self.__logger.generateApplicationLog(exception, 3, "__createRepository", use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG)
-		finally:
-			self.__action_to_cancel()
+			self.dialog.create_message("\nError creating repository. For more information, see the logs.", 8, 50, "Error Message")
+			self.logger.create_log(exception, 4, "_createRepository", use_file_handler = True, file_name = self.constants.LOG_FILE)
 
 
-	def deleteRepositories(self):
+	def delete_repositories(self) -> None:
 		"""
-		Method that deletes one or more repositories.
+		Method that deletes repositories.
 		"""
 		try:
-			snap_tool_data = self.__utils.readYamlFile(self.__constants.PATH_SNAP_TOOL_CONFIGURATION_FILE)
-			if snap_tool_data["use_authentication_method"] == True:
-				if snap_tool_data["authentication_method"] == "API Key":
-					conn_es = self.__elasticsearch.createConnectionToElasticSearchAPIKey(snap_tool_data, self.__constants.PATH_KEY_FILE)
-				elif snap_tool_data["authentication_method"] == "HTTP Authentication":
-					conn_es = self.__elasticsearch.createConnectionToElasticSearchHTTPAuthentication(snap_tool_data, self.__constants.PATH_KEY_FILE)
-			else:
-				conn_es = self.__elasticsearch.createConnectionToElasticSearchWithoutAuthentication(snap_tool_data)
-			list_all_repositories = self.__elasticsearch.getRepositories(conn_es)
-			if list_all_repositories:
-				list_to_dialog = self.__utils.convertListToDialogList(list_all_repositories, "Repository Name")
-				options_delete_repositories = self.__dialog.createCheckListDialog("Select one or more options:", 18, 70, list_to_dialog, "Delete ElasticSearch Repositories")
-				message_to_display = self.__utils.getStringFromList(options_delete_repositories, "Selected ElasticSearch repositories:")
-				self.__dialog.createScrollBoxDialog(message_to_display, 15, 60, "Delete ElasticSearch Repositories")
-				delete_repositories_confirmation = self.__dialog.createYesOrNoDialog("\nAre you sure to remove the selected repositories?", 8, 50, "Delete ElasticSearch Repositories")
-				if delete_repositories_confirmation == "ok":
-					passphrase = self.__utils.getPassphraseKeyFile(self.__constants.PATH_KEY_FILE)
-					password_privileged_actions = self.__dialog.createPasswordBoxDialog("Enter the password for privileged actions:", 8, 50, "password", True)
-					if password_privileged_actions == self.__utils.decryptDataWithAES(snap_tool_data["password_privileged_actions"], passphrase).decode("utf-8"):
-						telegram_bot_token = self.__utils.decryptDataWithAES(snap_tool_data["telegram_bot_token"], passphrase).decode("utf-8")
-						telegram_chat_id = self.__utils.decryptDataWithAES(snap_tool_data["telegram_chat_id"], passphrase).decode("utf-8")
-						for repository in options_delete_repositories:
-							self.__elasticsearch.deleteRepository(conn_es, repository)
-							self.__logger.generateApplicationLog("Repository removed: " + repository, "2", "__deleteRepositories", use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG)
-							message_telegram = self.__messages.deleteRepositoryMessage(repository)
-							response_http_code = self.__telegram.sendMessageTelegram(telegram_bot_token, telegram_chat_id, message_telegram)
-							self.__messages.createLogByTelegramCode(response_http_code)
-						self.__dialog.createMessageDialog("\nDeleted repositories.", 7, 50, "Notification Message")
+			if path.exists(self.constants.ES_CONFIGURATION):
+				configuration = libPyConfiguration()
+				data = self.utils.read_yaml_file(self.constants.ES_CONFIGURATION)
+				configuration.convert_dict_to_object(data)
+				if configuration.use_authentication:
+					if configuration.authentication_method == "HTTP Authentication":
+						conn_es = self.elasticsearch.create_connection_http_auth(configuration, self.constants.KEY_FILE)
+					elif configuration.authentication_method == "API Key":
+						conn_es = self.elasticsearch.create_connection_api_key(configuration, self.constants.KEY_FILE)
+				else:
+					conn_es = self.elasticsearch.create_connection_without_auth(configuration)
+				if path.exists(self.constants.SNAP_TOOL_CONFIGURATION):
+					snap_tool_data = self.utils.read_yaml_file(self.constants.SNAP_TOOL_CONFIGURATION)
+					passphrase = self.utils.get_passphrase(self.constants.KEY_FILE)
+					telegram_bot_token = self.utils.decrypt_data(snap_tool_data["telegram_bot_token"], passphrase).decode("utf-8")
+					telegram_chat_id = self.utils.decrypt_data(snap_tool_data["telegram_chat_id"], passphrase).decode("utf-8")
+					repositories_list = self.elasticsearch.get_repositories(conn_es)
+					if repositories_list:
+						tuple_to_rc = self.utils.convert_list_to_tuple_rc(repositories_list, "Repository Name")
+						repositories = self.dialog.create_checklist("Select one or more options:", 18, 70, tuple_to_rc, "Repositories")
+						text = self.utils.get_str_from_list(repositories, "Selected Repositories:")
+						self.dialog.create_scrollbox(text, 15, 60, "Delete Repositories")
+						delete_repository_yn = self.dialog.create_yes_or_no("\nAre you sure to remove the selected repositories?\n\n**NOTE: This action cannot be undone.", 10, 50, "Delete Repositories")
+						if delete_repository_yn == "ok":
+							for repository_name in repositories:
+								self.elasticsearch.delete_repository(conn_es, repository_name)
+								self.logger.create_log(f"Repository deleted: {repository_name}", 3, "_deleteRepository", use_file_handler = True, file_name = self.constants.LOG_FILE)
+								telegram_message = self.telegram_messages.generate_delete_repository_message(repository_name)
+								response_http_code = self.telegram.send_telegram_message(telegram_bot_token, telegram_chat_id, telegram_message)
+								self.telegram_messages.create_log_by_telegram_code(response_http_code)
+							self.dialog.create_message("\nRepositories deleted.", 7, 50, "Notification Message")
 					else:
-						self.__dialog.createMessageDialog("\nError deleting repositories. Authentication failed.", 8, 50, "Notification Message")
+						self.dialog.create_message("\nNo repositories found.", 7, 50, "Notification Message")
+				else:
+					self.dialog.create_message("\nSnap-Tool's Configuration not found.", 7, 50, "Error Message")
+				conn_es.transport.close()
 			else:
-				self.__dialog.createMessageDialog("\nNo repositories found.", 7, 50, "Notification Message")
-			conn_es.transport.close()
+				self.dialog.create_message("\nES Configuration not found.", 7, 50, "Error Message")
 		except Exception as exception:
-			self.__dialog.createMessageDialog("\nFailed to delete repositories. For more information, see the logs.", 8, 50, "Error Message")
-			self.__logger.generateApplicationLog(exception, 3, "__deleteRepositories", use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG)
-		finally:
-			self.__action_to_cancel()
+			self.dialog.create_message("\nError deleting repositories. For more information, see the logs.", 8, 50, "Error Message")
+			self.logger.create_log(exception, 4, "_deleteRepository", use_file_handler = True, file_name = self.constants.LOG_FILE)

@@ -1,134 +1,71 @@
 """
-Class that manages all the constant variables of the application.
+Class that manages the application's constants.
 """
+from typing import List
+from dataclasses import dataclass, field
+
+@dataclass(frozen = True)
 class Constants:
 	"""
-	Title that is shown in the background of the application.
+	Message displayed in the background.
 	"""
-	BACKTITLE = "SNAP-TOOL v3.3 by Erick Rodriguez"
+	BACKTITLE: str = "SNAP-TOOL v3.4 by Erick Rodriguez"
 
 	"""
-	Absolute path of the Snap-Tool configuration file.
+	Snap-Tool's configuration file.
 	"""
-	PATH_SNAP_TOOL_CONFIGURATION_FILE = "/etc/Snap-Tool/configuration/snap_tool_conf.yaml"
+	ES_CONFIGURATION: str = "/etc/Snap-Tool/configuration/es_conf.yaml"
 
 	"""
-	Absolute path of the file where the key for the encryption/decryption process is stored.
+	Snap-Tool's configuration file.
 	"""
-	PATH_KEY_FILE = "/etc/Snap-Tool/configuration/key"
+	SNAP_TOOL_CONFIGURATION: str = "/etc/Snap-Tool/configuration/snap_tool.yaml"
 
 	"""
-	Absolute path of the application logs.
+	Encryption key's file.
 	"""
-	NAME_FILE_LOG = "/var/log/Snap-Tool/snap-tool-log-"
+	KEY_FILE: str = "/etc/Snap-Tool/configuration/key"
 
 	"""
-	Name of the user created for the operation of the application.
+	Snap-Tool's log file.
 	"""
-	USER = "snap_tool"
+	LOG_FILE: str = "/var/log/Snap-Tool/snap-tool-log"
 
 	"""
-	Name of the group created for the operation of the application.
+	Options displayed in the "Main" menu.
 	"""
-	GROUP = "snap_tool"
+	MAIN_MENU_OPTIONS: List = field(default_factory = lambda : [("1", "ES Configuration"), ("2", "Configuration"), ("3", "Snapshots"), ("4", "Indices"), ("5", "Repositories"), ("6", "Nodes Information"), ("7", "About"), ("8", "Exit")])
 
 	"""
-	Options displayed in the main menu.
+	Options that are displayed when the configuration file doesn't exist.
 	"""
-	OPTIONS_MAIN_MENU = [("1", "Configuration"),
-					     ("2", "Repositories"),
-					     ("3", "Snapshots"),
-					     ("4", "Indices"),
-					     ("5", "Nodes information"),
-					     ("6", "About"),
-					     ("7", "Exit")]
+	CONFIGURATION_OPTIONS_FALSE: List = field(default_factory = lambda : [("Create", "Create the configuration file", 0)])
 
 	"""
-	Options that are shown when the configuration file does not exist.
+	Options that are displayed when the configuration file exists.
 	"""
-	OPTIONS_CONFIGURATION_FALSE = [("Create", "Create the configuration file", 0)]
+	CONFIGURATION_OPTIONS_TRUE: List = field(default_factory = lambda : [("Modify", "Modify the configuration file", 0), ("Display", "Display the configuration file", 0)])
+	
+	"""
+	Configuration's fields.
+	"""
+	CONFIGURATION_FIELDS: List = field(default_factory = lambda : [("Bot Token", "Telegram Bot Token", 0), ("Chat ID", "Telegram channel identifier", 0)]) 
 
 	"""
-	Options that are shown when the configuration file exists.
+	Options displayed in the "Snapshots" menu.
 	"""
-	OPTIONS_CONFIGURATION_TRUE = [("Update", "Update the configuration file", 0),
-								  ("Display", "Display the configuration data", 0)]
+	SNAPSHOTS_MENU_OPTIONS: List = field(default_factory = lambda : [("1", "Create Snapshot"), ("2", "Delete Snapshot(s)"), ("3", "Restore Snapshot"), ("4", "Mount Searchable Snapshot")])
 
 	"""
-	Options that are shown when the configuration file exists.
+	Options displayed in the "Indexes" menu.
 	"""
-	OPTIONS_AUTHENTICATION_METHOD = [("HTTP Authentication", "Use HTTP Authentication", 0),
-								     ("API Key", "Use API Key", 0)]
+	INDEXES_MENU_OPTIONS: List = field(default_factory = lambda : [("1", "Delete Index(es)")])
 
 	"""
-	Options displayed to update a value established in the Snap-Tool configuration.
+	Options displayed in the "Repositories" menu.
 	"""
-	OPTIONS_CONFIGURATION_SNAP_TOOL_UPDATE = [("Host", "ElasticSearch Host", 0),
-							 	 			  ("Port", "ElasticSearch Port", 0),
-							 	 			  ("SSL/TLS", "Enable or disable SSL/TLS connection", 0),
-							 	 			  ("Authentication", "Enable or disable authentication method", 0),
-							 	 			  ("Delete Index", "Enable or disable delete index", 0),
-							 	 			  ("Password", "Password for privileged actions", 0),
-							 	 			  ("Bot Token", "Telegram Bot Token", 0),
-							 	 			  ("Chat ID", "Telegram channel identifier", 0)]
+	REPOSITORIES_MENU_OPTIONS: List = field(default_factory = lambda : [("1", "Create Repository"), ("2", "Delete Repositories")])
 
-	"""
-	Options displayed when "ElasticSearch hosts" option will be modified.
-	"""
-	OPTIONS_ES_HOSTS_UPDATE = [("1", "Add New Hosts"),
-							   ("2", "Modify Hosts"),
-							   ("3", "Remove Hosts")]
-
-	"""
-	Options displayed when the use of SSL/TLS is enabled.
-	"""
-	OPTIONS_SSL_TLS_TRUE = [("Disable", "Disable SSL/TLS communication", 0),
-							("Certificate Verification", "Modify certificate verification", 0)]
-
-	"""
-	Options displayed when the use of SSL/TLS is disabled.
-	"""
-	OPTIONS_SSL_TLS_FALSE = [("Enable", "Enable SSL/TLS communication", 0)]
-
-	"""
-	Options displayed when "SSL certificate verification" option is enabled.
-	"""
-	OPTIONS_VERIFICATE_CERTIFICATE_TRUE = [("Disable", "Disable certificate verification", 0),
-								   		   ("Certificate File", "Change certificate file", 0)]
-
-	"""
-	Options displayed when "SSL certificate verification" option is disabled.
-	"""
-	OPTIONS_VERIFICATE_CERTIFICATE_FALSE = [("Enable", "Enable certificate verification", 0)]
-
-	"""
-	Options displayed when "Use authentication method" option is enabled.
-	"""
-	OPTIONS_AUTHENTICATION_TRUE = [("Data", "Modify authentication method", 0),
-								   ("Disable", "Disable authentication method", 0)]
-
-	"""
-	Options displayed when an authentication method will be modified.
-	"""
-	OPTIONS_AUTHENTICATION_METHOD_TRUE = [("Data", "Modify authentication method data", 0),
-								   	      ("Disable", "Disable authentication method", 0)]
-
-	"""
-	Options displayed when "Use authentication method" option is disabled.
-	"""
-	OPTIONS_AUTHENTICATION_FALSE = [("Enable", "Enable authentication", 0)]
-
-	"""
-	Options displayed when the HTTP authentication credentials will be modified.
-	"""
-	OPTIONS_HTTP_AUTHENTICATION_DATA = [("Username", "Username for HTTP Authentication", 0),
-								 		("Password", "User password", 0)]
-
-	"""
-	Options displayed when the API Key credentials will be modified.
-	"""
-	OPTIONS_API_KEY_DATA = [("API Key ID", "API Key Identifier", 0),
-							("Api Key", "API Key", 0)]
 
 	"""
 	Options displayed when automatic index removal is enabled.
@@ -139,22 +76,3 @@ class Constants:
 	Options displayed when automatic index removal is disabled
 	"""
 	OPTIONS_DELETE_INDEX_FALSE = [("Enable", "Enable automatic index removal", 0)]
-
-	"""
-	Options displayed in the "Repositories" menu.
-	"""
-	OPTIONS_REPOSITORIES_MENU = [("1", "Create Repository"),
-							     ("2", "Delete Repositories")]
-
-	"""
-	Options displayed in the "Indexes" menu.
-	"""
-	OPTIONS_INDEXES_MENU = [("1", "Delete Indexes")]
-
-	"""
-	Options displayed in the "Snapshots" menu.
-	"""
-	OPTIONS_SNAPSHOTS_MENU = [("1", "Create Snapshot"),
-							  ("2", "Delete Snapshots"),
-							  ("3", "Restore Snapshot"),
-							  ("4", "Mount Searchable Snapshot")]

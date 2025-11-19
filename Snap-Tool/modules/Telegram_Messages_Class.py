@@ -1,162 +1,183 @@
+"""
+Class that manages everything related to Telegram's Messages.
+"""
 from time import strftime
 from libPyLog import libPyLog
 from .Constants_Class import Constants
+from dataclasses import dataclass, field
 
-"""
-Class that manages the messages that are sent via Telegram.
-"""
+@dataclass
 class TelegramMessages:
 
-	def __init__(self):
+	EMOJI_ALERT = "\u26A0\uFE0F"
+	EMOJI_CLOCK = "\u23F0"	
+	EMOJI_CHECK = "\u2611\uFE0F"
+
+	logger: libPyLog = field(default_factory = libPyLog)
+	constants: Constants = field(default_factory = Constants)
+
+
+	def generate_create_snapshot_message(self, index_name: str, repository_name: str) -> str:
 		"""
-		Class constructor.
+		Method that generates the message to be sent via Telegram when a Snapshot's creation begins.
+
+		Parameters:
+			index_name (str): Index's name.
+			repository_name (str): Repository's name.
+
+		Returns:
+			telegram_message (str): Message to be sent via Telegram.
 		"""
-		self.__logger = libPyLog()
-		self.__constants = Constants()
+		telegram_message = f"{self.EMOJI_ALERT} Snap-Tool {self.EMOJI_ALERT}\n\n{self.EMOJI_CLOCK} Alert sent: {strftime("%c")}\n\n"
+		telegram_message += f"{self.EMOJI_CHECK} Action: Snapshot creation has started\n"
+		telegram_message += f"{self.EMOJI_CHECK} Snapshot Name: {index_name}\n"
+		telegram_message += f"{self.EMOJI_CHECK} Index Name: {index_name}\n"
+		telegram_message += f"{self.EMOJI_CHECK} Repository Name: {repository_name}"
+		return telegram_message
 
 
-	def indexRemovedMessage(self, index_name):
+	def generate_end_snapshot_message(self, snapshot_name: str, repository_name: str, start_time: str, end_time: str) -> str:
 		"""
-		Method that generates the message to be sent when an index is deleted.
+		Method that generates the message to be sent via Telegram when a Snapshot's creation ends.
 
-		Returns the message to send.
-		
-		:arg index_name (string): Index name.
+		Parameters:
+			snapshot_name (str): Snapshot's name.
+			repository_name (str): Repository's name.
+			start_time (str): Snapshot creation start date.
+			end_time (str): End date of snapshot creation.
+
+		Returns:
+			telegram_message (str): Message to be sent via Telegram.
 		"""
-		message_telegram = u'\u26A0\uFE0F' + " " + "Snap-Tool" +  " " + u'\u26A0\uFE0F' + "\n\n" + u'\u23F0' + " Alert sent: " + strftime("%c") + "\n\n\n"
-		message_telegram += u'\u2611\uFE0F' + " Action: Index removed\n"
-		message_telegram += u'\u2611\uFE0F' + " Index Name: " + index_name
-		return message_telegram
+		telegram_message = f"{self.EMOJI_ALERT} Snap-Tool {self.EMOJI_ALERT}\n\n{self.EMOJI_CLOCK} Alert sent: {strftime("%c")}\n\n"
+		telegram_message += f"{self.EMOJI_CHECK} Action: Snapshot creation completed\n"
+		telegram_message += f"{self.EMOJI_CHECK} Snapshot Name: {snapshot_name}\n"
+		telegram_message += f"{self.EMOJI_CHECK} Repository Name: {repository_name}\n"
+		telegram_message += f"{self.EMOJI_CHECK} Start Time: {start_time}\n"
+		telegram_message += f"{self.EMOJI_CHECK} End Time: {end_time}"
+		return telegram_message
 
 
-	def createSnapshotMessage(self, repository_name, index_name):
+	def generate_delete_snapshot_message(self, snapshot_name: str, repository_name: str) -> str:
 		"""
-		Method that generates the message to send when the creation of a snapshot starts.
+		Method that generates the message to be sent via Telegram when a Snapshot is deleted.
 
-		Returns the message to send.
-		
-		:arg repository_name (string): Repository name.
-		:arg index_name (string): Index name.
+		Parameters:
+			snapshot_name (str): Snapshot's name.
+			repository_name (str): Repository's name.
+
+		Returns:
+			telegram_message (str): Message to be sent via Telegram.
 		"""
-		message_telegram = u'\u26A0\uFE0F' + " Snap-Tool " + u'\u26A0\uFE0F' + "\n\n" + u'\u23F0' + " Alert sent: " + strftime("%c") + "\n\n\n"
-		message_telegram += u'\u2611\uFE0F' + " Action: Snapshot creation has started\n"
-		message_telegram += u'\u2611\uFE0F' + " Snapshot Name: " + index_name + '\n'
-		message_telegram += u'\u2611\uFE0F' + " Index Name: " + index_name + '\n'
-		message_telegram += u'\u2611\uFE0F' + " Repository Name: " + repository_name
-		return message_telegram
+		telegram_message = f"{self.EMOJI_ALERT} Snap-Tool {self.EMOJI_ALERT}\n\n{self.EMOJI_CLOCK} Alert sent: {strftime("%c")}\n\n"
+		telegram_message += f"{self.EMOJI_CHECK} Action: Snapshot deleted\n"
+		telegram_message += f"{self.EMOJI_CHECK} Snapshot Name: {snapshot_name}\n"
+		telegram_message += f"{self.EMOJI_CHECK} Repository Name: {repository_name}"
+		return telegram_message
 
 
-	def endSnapshotMessage(self, repository_name, snapshot_name, start_time, end_time):
+	def generate_restore_snapshot_message(self, snapshot_name: str, repository_name: str) -> str:
 		"""
-		Method that generates the message to be sent when the creation of a snapshot is finished.
+		Method that generates the message to be sent via Telegram when a snapshot is restored.
 
-		Returns the message to send.
-		
-		:arg repository_name (string): Repository name.
-		:arg index_name (string): Index name.
-		:arg start_time (string): Date the snapshot creation started.
-		:arg end_time (string): Date the snapshot creation ended.
+		Parameters:
+			snapshot_name (str): Snapshot's name.
+			repository_name (str): Repository's name.
+
+		Returns:
+			telegram_message (str): Message to be sent via Telegram.
 		"""
-		message_telegram = u'\u26A0\uFE0F' + " Snap-Tool " + u'\u26A0\uFE0F' + "\n\n" + u'\u23F0' + " Alert sent: " + strftime("%c") + "\n\n\n"
-		message_telegram += u'\u2611\uFE0F' + " Action: Snapshot creation completed\n"
-		message_telegram += u'\u2611\uFE0F' + " Snapshot Name: " + snapshot_name + '\n'
-		message_telegram += u'\u2611\uFE0F' + " Repository Name: " + repository_name + '\n'
-		message_telegram += u'\u2611\uFE0F' + " Start Time: " + str(start_time) + '\n'
-		message_telegram += u'\u2611\uFE0F' + " End Time: " + str(end_time)
-		return message_telegram
+		telegram_message = f"{self.EMOJI_ALERT} Snap-Tool {self.EMOJI_ALERT}\n\n{self.EMOJI_CLOCK} Alert sent: {strftime("%c")}\n\n"
+		telegram_message += f"{self.EMOJI_CHECK} Action: Snapshot restored\n"
+		telegram_message += f"{self.EMOJI_CHECK} Snapshot Name: {snapshot_name}\n"
+		telegram_message += f"{self.EMOJI_CHECK} Repository Name: {repository_name}"
+		return telegram_message
 
 
-	def snapshotRestoredMessage(self, repository_name, snapshot_name):
+	def generate_mount_snapshot_message(self, snapshot_name: str, repository_name: str) -> str:
 		"""
-		Method that generates the message to send when a snapshot is restored.
+		Method that generates the message to be sent via Telegram when a snapshot is mounted as a searchable snapshot.
 
-		Returns the message to send.
-		
-		:arg repository_name (string): Repository name.
-		:arg snapshot_name (string): Snapshot name.
+		Parameters:
+			snapshot_name (str): Snapshot's name.
+			repository_name (str): Repository's name.
+
+		Returns:
+			telegram_message (str): Message to be sent via Telegram.
 		"""
-		message_telegram = u'\u26A0\uFE0F' + " Snap-Tool " + u'\u26A0\uFE0F' + "\n\n" + u'\u23F0' + " Alert sent: " + strftime("%c") + "\n\n\n"
-		message_telegram += u'\u2611\uFE0F' + " Action: Snapshot restore\n"
-		message_telegram += u'\u2611\uFE0F' + " Snapshot Name: " + snapshot_name + '\n'
-		message_telegram += u'\u2611\uFE0F' + " Repository Name: " + repository_name
-		return message_telegram
+		telegram_message = f"{self.EMOJI_ALERT} Snap-Tool {self.EMOJI_ALERT}\n\n{self.EMOJI_CLOCK} Alert sent: {strftime("%c")}\n\n"
+		telegram_message += f"{self.EMOJI_CHECK} Action: Snapshot mounted as a searchable snapshot\n"
+		telegram_message += f"{self.EMOJI_CHECK} Snapshot Name: {snapshot_name}\n"
+		telegram_message += f"{self.EMOJI_CHECK} Repository Name: {repository_name}\n"
+		telegram_message += f"{self.EMOJI_CHECK} Index Name: {snapshot_name}"
+		return telegram_message
+	
 
-
-	def mountSearchableSnapshotMessage(self, repository_name, snapshot_name):
+	def generate_delete_index_message(self, index_name: str) -> str:
 		"""
-		Method that generates the message to send when a snapshot is mounted as a searchable snapshot.
+		Method that generates the message to be sent via Telegram when an index is deleted.
 
-		Returns the message to send.
-		
-		:arg repository_name (string): Repository name.
-		:arg snapshot_name (string): Snapshot name.
+		Parameters:
+			index_name (str): Index's name.
+
+		Returns:
+			telegram_message (str): Message to be sent via Telegram.
 		"""
-		message_telegram = u'\u26A0\uFE0F' + " Snap-Tool " + u'\u26A0\uFE0F' + "\n\n" + u'\u23F0' + " Alert sent: " + strftime("%c") + "\n\n\n"
-		message_telegram += u'\u2611\uFE0F' + " Action: Snapshot mounted as a searchable snapshot\n"
-		message_telegram += u'\u2611\uFE0F' + " Snapshot Name: " + snapshot_name + '\n'
-		message_telegram += u'\u2611\uFE0F' + " Repository Name: " + repository_name
-		return message_telegram
+		telegram_message = f"{self.EMOJI_ALERT} Snap-Tool {self.EMOJI_ALERT}\n\n{self.EMOJI_CLOCK} Alert sent: {strftime("%c")}\n\n"
+		telegram_message += f"{self.EMOJI_CHECK} Action: Index deleted\n"
+		telegram_message += f"{self.EMOJI_CHECK} Index Name: {index_name}"
+		return telegram_message
 
 
-	def snapshotRemovedMessage(self, repository_name, snapshot_name):
+	def generate_create_repository_message(self, repository_name: str, repository_path: str, compress_repository: bool) -> str:
 		"""
-		Method that generates the message to send when a snapshot is deleted.
+		Method that generates the message to be sent via Telegram when a Repository's creation begins.
 
-		Returns the message to send.
-		
-		:arg repository_name (string): Repository name.
-		:arg snapshot_name (string): Snapshot name.
+		Parameters:
+			repository_name (str): Repository's name.
+			repository_path (str): Repository's path.
+			compress_repository (bool): Option that defines whether metadata files are stored compressed in the repository or not.
+
+		Returns:
+			telegram_message (str): Message to be sent via Telegram.
 		"""
-		message_telegram = u'\u26A0\uFE0F' + " Snap-Tool " + u'\u26A0\uFE0F' + "\n\n" + u'\u23F0' + " Alert sent: " + strftime("%c") + "\n\n\n"
-		message_telegram += u'\u2611\uFE0F' + " Action: Snaphot removed\n"
-		message_telegram += u'\u2611\uFE0F' + " Snapshot Name: " + snapshot_name + '\n'
-		message_telegram += u'\u2611\uFE0F' + " Repository Name: " + repository_name
-		return message_telegram
+		telegram_message = f"{self.EMOJI_ALERT} Snap-Tool {self.EMOJI_ALERT}\n\n{self.EMOJI_CLOCK} Alert sent: {strftime("%c")}\n\n"
+		telegram_message += f"{self.EMOJI_CHECK} Action: Repository Created\n"
+		telegram_message += f"{self.EMOJI_CHECK} Repository Name: {repository_name}\n"
+		telegram_message += f"{self.EMOJI_CHECK} Repository Path: {repository_path}\n"
+		telegram_message += f"{self.EMOJI_CHECK} Repository Compression: {compress_repository}"
+		return telegram_message
 
 
-	def createRepositoryMessage(self, repository_name, path_repository, use_compress_repository):
+	def generate_delete_repository_message(self, repository_name: str) -> str:
 		"""
-		Method that generates the message to send when a snapshot is deleted.
+		Method that generates the message to be sent via Telegram when a repository is deleted.
 
-		Returns the message to send.
-		
-		:arg repository_name (string): Repository name.
-		:arg path_repository (string): Repository path.
-		:arg use_compress_repository (boolean): Whether or not to compress the metadata in the repository.
+		Parameters:
+			repository_name (str): Repository's name.
+
+		Returns:
+			telegram_message (str): Message to be sent via Telegram.
 		"""
-		message_telegram = u'\u26A0\uFE0F' + " Snap-Tool " + u'\u26A0\uFE0F' + "\n\n" + u'\u23F0' + " Alert sent: " + strftime("%c") + "\n\n\n"
-		message_telegram += u'\u2611\uFE0F' + " Action: Repository created\n"
-		message_telegram += u'\u2611\uFE0F' + " Repository Name: " + repository_name + '\n'
-		message_telegram += u'\u2611\uFE0F' + " Repository Path: " + path_repository + '\n'
-		message_telegram += u'\u2611\uFE0F' + " Repository Compression: " + str(use_compress_repository)
-		return message_telegram
+		telegram_message = f"{self.EMOJI_ALERT} Snap-Tool {self.EMOJI_ALERT}\n\n{self.EMOJI_CLOCK} Alert sent: {strftime("%c")}\n\n"
+		telegram_message += f"{self.EMOJI_CHECK} Action: Repository Deleted\n"
+		telegram_message += f"{self.EMOJI_CHECK} Repository Name: {repository_name}"
+		return telegram_message
 
 
-	def deleteRepositoryMessage(self, repository_name):
+	def create_log_by_telegram_code(self, response_http_code: int) -> None:
 		"""
-		Method that generates the message to send when a repository is deleted.
+		Method that generates an application log based on the HTTP response code of the Telegram API.
 
-		Returns the message to send.
-		
-		:arg repository_name (string): Repository name.
+		Parameters:
+			response_http_code (int): HTTP code returned by the Telegram API.
 		"""
-		message_telegram = u'\u26A0\uFE0F' + " Snap-Tool " + u'\u26A0\uFE0F' + "\n\n" + u'\u23F0' + " Alert sent: " + strftime("%c") + "\n\n\n"
-		message_telegram += u'\u2611\uFE0F' + " Action: Repository deleted\n"
-		message_telegram += u'\u2611\uFE0F' + " Repository Name: " + repository_name
-		return message_telegram
-
-
-	def createLogByTelegramCode(self, response_http_code):
-		"""
-		Method that creates a log based on the received HTTP code.
-		
-		:arg response_http_code (integer): HTTP response code.
-		"""
-		if response_http_code == 200:
-			self.__logger.generateApplicationLog("Telegram message sent.", 1, "__sendTelegramMessage", use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG)
-		elif response_http_code == 400:
-			self.__logger.generateApplicationLog("Telegram message not sent. Status: Bad request.", 3, "__sendTelegramMessage", use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG)
-		elif response_http_code == 401:
-			self.__logger.generateApplicationLog("Telegram message not sent. Status: Unauthorized.", 3, "__sendTelegramMessage", use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG)
-		elif response_http_code == 404:
-			self.__logger.generateApplicationLog("Telegram message not sent. Status: Not found.", 3, "__sendTelegramMessage", use_file_handler = True, name_file_log = self.__constants.NAME_FILE_LOG)
+		match response_http_code:
+			case 200:
+				self.logger.create_log("Telegram message sent", 2, "_sendTelegramMessage", use_file_handler = True, file_name = self.constants.LOG_FILE)
+			case 400:
+				self.logger.create_log("Telegram message not sent. Bad request.", 4, "_sendTelegramMessage", use_file_handler = True, file_name = self.constants.LOG_FILE)
+			case 401:
+				self.logger.create_log("Telegram message not sent. Unauthorized.", 4, "_sendTelegramMessage", use_file_handler = True, file_name = self.constants.LOG_FILE)
+			case 404:
+				self.logger.create_log("Telegram message not sent. Not found.", 4, "_sendTelegramMessage", use_file_handler = True, file_name = self.constants.LOG_FILE)

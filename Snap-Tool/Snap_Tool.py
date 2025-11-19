@@ -1,15 +1,12 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python3.12
 
+"""
+Main function.
+"""
 from modules.Snap_Tool_Class import SnapTool
 
-"""
-Attribute that stores an object of the SnapTool class.
-"""
-snap_tool = SnapTool()
-
-"""
-Main function of the application
-"""
-if __name__ == "__main__":	
+if __name__ == "__main__":
+	snap_tool = SnapTool()
 	while True:
-		snap_tool.mainMenu()
+		snap_tool.main_menu()
+		
