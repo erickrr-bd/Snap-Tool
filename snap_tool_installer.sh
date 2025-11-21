@@ -85,8 +85,6 @@ elif [ $opc = "U" ] || [ $opc = "u" ]; then
 	# Assignment of permits and owner.
 	banner "Change of permissions and owner"
 	echo ''
-	find $BASE_DIR -type f -exec chmod 640 {} \;
-	find $BASE_DIR -type d -exec chmod 750 {} \;
 	find /opt/Snap-Tool -type f -exec chmod 640 {} \;
 	find /opt/Snap-Tool -type d -exec chmod 750 {} \;
 	chmod +x /opt/Snap-Tool/Snap_Tool.py
