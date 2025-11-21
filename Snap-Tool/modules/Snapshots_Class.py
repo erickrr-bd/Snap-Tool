@@ -62,24 +62,19 @@ class Snapshots:
 							response_http_code = self.telegram.send_telegram_message(telegram_bot_token, telegram_chat_id, telegram_message)
 							self.telegram_messages.create_log_by_telegram_code(response_http_code)
 							self.logger.create_log(f"Snapshot creation started: {index_name}", 2, "_createSnapshot", use_file_handler = True, file_name = self.constants.LOG_FILE)
+							self.elasticsearch.create_snapshot(conn_es, index_name, repository_name, False)
 							if wait_for_completion_yn == "ok":
-								self.elasticsearch.create_snapshot(conn_es, index_name, repository_name)
+								while True:
+									snapshot_current_status = self.elasticsearch.get_snapshot_current_status(conn_es, index_name, repository_name)
+									if snapshot_current_status == "SUCCESS":
+										break
+									sleep(30)				
 								snapshot_info = self.elasticsearch.get_snapshot_info(conn_es, index_name, repository_name)
 								telegram_message = self.telegram_messages.generate_end_snapshot_message(index_name, repository_name, snapshot_info["snapshots"][0]["start_time"], snapshot_info["snapshots"][0]["end_time"])
 								response_http_code = self.telegram.send_telegram_message(telegram_bot_token, telegram_chat_id, telegram_message)
 								self.telegram_messages.create_log_by_telegram_code(response_http_code)
 								self.logger.create_log(f"Snapshot created: {index_name}", 2, "_createSnapshot", use_file_handler = True, file_name = self.constants.LOG_FILE)
 								self.dialog.create_message(f"\nSnapshot created: {index_name}", 7, 50, "Notification Message")
-							else:
-								self.elasticsearch.create_snapshot(conn_es, index_name, repository_name, False)
-							delete_index_yn = self.elasticsearch.create_yes_or_no("\nAre you sure to remove the index?", 7, 50, "Delete Index")
-							if delete_index_yn == "ok":
-								self.elasticsearch.delete_index(conn_es, index_name)
-								self.logger.create_log(f"Index deleted: {index_name}", 3, "_createSnapshot", use_file_handler = True, file_name = self.constants.LOG_FILE)
-								telegram_message = self.telegram_messages.generate_delete_index_message(index_name)
-								response_http_code = self.telegram.send_telegram_message(telegram_bot_token, telegram_chat_id, telegram_message)
-								self.telegram_messages.create_log_by_telegram_code(response_http_code)
-								self.dialog.create_message("\nIndex(es) deleted.", 7, 50, "Notification Message")
 						else:
 							self.dialog.create_message("\nNo repositories found.", 7, 50, "Notification Message")
 					else:
@@ -256,3 +251,49 @@ class Snapshots:
 		except Exception as exception:
 			self.dialog.create_message("\nError mounting a snapshot as a searchable snapshot. For more information, see the logs.", 8, 50, "Error Message")
 			self.logger.create_log(exception, 4, "_mountSnapshot", use_file_handler = True, file_name = self.constants.LOG_FILE)
+
+
+	def get_snapshot_status(self) -> None:
+		"""
+		Method that obtains the current status of all snapshots of a specific repository.
+		"""
+		try:
+			if path.exists(self.constants.ES_CONFIGURATION):
+				configuration = libPyConfiguration()
+				data = self.utils.read_yaml_file(self.constants.ES_CONFIGURATION)
+				configuration.convert_dict_to_object(data)
+				if configuration.use_authentication:
+					if configuration.authentication_method == "HTTP Authentication":
+						conn_es = self.elasticsearch.create_connection_http_auth(configuration, self.constants.KEY_FILE)
+					elif configuration.authentication_method == "API Key":
+						conn_es = self.elasticsearch.create_connection_api_key(configuration, self.constants.KEY_FILE)
+				else:
+					conn_es = self.elasticsearch.create_connection_without_auth(configuration)
+				if path.exists(self.constants.SNAP_TOOL_CONFIGURATION):
+					snap_tool_data = self.utils.read_yaml_file(self.constants.SNAP_TOOL_CONFIGURATION)
+					passphrase = self.utils.get_passphrase(self.constants.KEY_FILE)
+					telegram_bot_token = self.utils.decrypt_data(snap_tool_data["telegram_bot_token"], passphrase).decode("utf-8")
+					telegram_chat_id = self.utils.decrypt_data(snap_tool_data["telegram_chat_id"], passphrase).decode("utf-8")
+					repositories_list = self.elasticsearch.get_repositories(conn_es)
+					if repositories_list:
+						tuple_to_rc = self.utils.convert_list_to_tuple_rc(repositories_list, "Repository Name")
+						repository_name = self.dialog.create_radiolist("Select a option:", 18, 70, tuple_to_rc, "Repositories")
+						snapshots_list = self.elasticsearch.get_snapshots_by_repository(conn_es, repository_name)
+						if snapshots_list:
+							text = f"Repository: {repository_name}\n\nSnapshots:\n"
+							for snapshot_name in snapshots_list:
+								snapshot_status = self.elasticsearch.get_snapshot_current_status(conn_es, snapshot_name, repository_name)
+								text += f"- {snapshot_name}: {snapshot_status}\n"
+							self.dialog.create_scrollbox(text, 16, 60, "Snapshots' Current Status")
+						else:
+							self.dialog.create_message("\nNo snapshots found.", 7, 50, "Notification Message")
+					else:
+						self.dialog.create_message("\nNo repositories found.", 7, 50, "Notification Message")
+				else:
+					self.dialog.create_message("\nSnap-Tool's Configuration not found.", 7, 50, "Error Message")
+				conn_es.transport.close()
+			else:
+				self.dialog.create_message("\nES Configuration not found.", 7, 50, "Error Message")
+		except Exception as exception:
+			self.dialog.create_message("\nError getting snapshot's status. For more information, see the logs.", 8, 50, "Error Message")
+			self.logger.create_log(exception, 4, "_getSnapshotStatus", use_file_handler = True, file_name = self.constants.LOG_FILE)

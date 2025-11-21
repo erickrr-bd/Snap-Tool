@@ -54,7 +54,7 @@ class Constants:
 	"""
 	Options displayed in the "Snapshots" menu.
 	"""
-	SNAPSHOTS_MENU_OPTIONS: List = field(default_factory = lambda : [("1", "Create Snapshot"), ("2", "Delete Snapshot(s)"), ("3", "Restore Snapshot"), ("4", "Mount Searchable Snapshot")])
+	SNAPSHOTS_MENU_OPTIONS: List = field(default_factory = lambda : [("1", "Create Snapshot"), ("2", "Delete Snapshot(s)"), ("3", "Restore Snapshot"), ("4", "Mount Searchable Snapshot"), ("5", "Get Snapshots' Status")])
 
 	"""
 	Options displayed in the "Indexes" menu.
@@ -65,14 +65,3 @@ class Constants:
 	Options displayed in the "Repositories" menu.
 	"""
 	REPOSITORIES_MENU_OPTIONS: List = field(default_factory = lambda : [("1", "Create Repository"), ("2", "Delete Repositories")])
-
-
-	"""
-	Options displayed when automatic index removal is enabled.
-	"""
-	OPTIONS_DELETE_INDEX_TRUE = [("Disable", "Disable automatic index removal", 0)]
-
-	"""
-	Options displayed when automatic index removal is disabled
-	"""
-	OPTIONS_DELETE_INDEX_FALSE = [("Enable", "Enable automatic index removal", 0)]

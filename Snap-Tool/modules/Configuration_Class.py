@@ -14,7 +14,6 @@ class Configuration:
 	telegram_bot_token: tuple = field(default_factory = tuple)
 	telegram_chat_id: tuple = field(default_factory = tuple)
 
-
 	def __init__(self) -> None:
 		"""
 		Class constructor.

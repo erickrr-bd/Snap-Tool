@@ -44,7 +44,7 @@ class SnapTool:
 		"""
 		Snapshots' menu.
 		"""
-		option = self.dialog.create_menu("Select a option:", 11, 50, self.constants.SNAPSHOTS_MENU_OPTIONS, "Snapshots Menu")
+		option = self.dialog.create_menu("Select a option:", 12, 50, self.constants.SNAPSHOTS_MENU_OPTIONS, "Snapshots Menu")
 		self.switch_snapshots_menu(int(option))
 
 
@@ -107,6 +107,8 @@ class SnapTool:
 				snapshots.restore_snapshot()
 			case 4:
 				snapshots.delete_inventories()
+			case 5:
+				snapshots.get_snapshot_status()
 
 
 	def switch_indexes_menu(self, option: int) -> None:
