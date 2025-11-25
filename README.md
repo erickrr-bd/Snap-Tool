@@ -1,12 +1,6 @@
-# Snap-Tool v3.3
+# Snap-Tool v3.4
 
-Author: Erick Rodríguez 
 
-Email: erickrr.tbd93@gmail.com, erodriguez@tekium.mx
-
-License: GPLv3
-
-Snap-Tool allows the management of ElasticSearch repositories, snapshots and indexes in an easy and graphical way.
 
 # Applications
 ## Snap-Tool
