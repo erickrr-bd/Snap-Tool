@@ -5,7 +5,6 @@ from os import path
 from sys import exit
 from libPyElk import libPyElk
 from libPyLog import libPyLog
-from dataclasses import dataclass
 from libPyUtils import libPyUtils
 from .Indexes_Class import Indexes
 from libPyDialog import libPyDialog
@@ -15,7 +14,6 @@ from .Repositories_Class import Repositories
 from .Configuration_Class import Configuration
 from libPyConfiguration import libPyConfiguration
 
-@dataclass
 class SnapTool:
 
 	def __init__(self) -> None:
@@ -23,9 +21,12 @@ class SnapTool:
 		Class constructor.
 		"""
 		self.logger = libPyLog()
+		self.indexes = Indexes()
 		self.utils = libPyUtils()
 		self.constants = Constants()
+		self.snapshots = Snapshots()
 		self.elasticsearch = libPyElk()
+		self.repositories = Repositories()
 		self.dialog = libPyDialog(self.constants.BACKTITLE)
 
 
@@ -35,7 +36,8 @@ class SnapTool:
     	"""
 		try:
 			option = self.dialog.create_menu("Select a option:", 15, 50, self.constants.MAIN_MENU_OPTIONS, "Main Menu")
-			self.switch_main_menu(int(option))
+			if option:
+				self.switch_main_menu(int(option))
 		except KeyboardInterrupt:
 			pass
 
@@ -44,24 +46,36 @@ class SnapTool:
 		"""
 		Snapshots' menu.
 		"""
-		option = self.dialog.create_menu("Select a option:", 12, 50, self.constants.SNAPSHOTS_MENU_OPTIONS, "Snapshots Menu")
-		self.switch_snapshots_menu(int(option))
+		try:
+			option = self.dialog.create_menu("Select a option:", 12, 50, self.constants.SNAPSHOTS_MENU_OPTIONS, "Snapshots Menu")
+			if option:
+				self.switch_snapshots_menu(int(option))
+		except KeyboardInterrupt:
+			pass
 
 
 	def indexes_menu(self) -> None:
 		"""
 		Indexes' menu.
 		"""
-		option = self.dialog.create_menu("Select a option:", 8, 50, self.constants.INDEXES_MENU_OPTIONS, "Indexes Menu")
-		self.switch_indexes_menu(int(option))
+		try:
+			option = self.dialog.create_menu("Select a option:", 8, 50, self.constants.INDEXES_MENU_OPTIONS, "Indexes Menu")
+			if option:
+				self.switch_indexes_menu(int(option))
+		except KeyboardInterrupt:
+			pass
 
 
 	def repositories_menu(self) -> None:
 		"""
 		Repositories' menu.
 		"""
-		option = self.dialog.create_menu("Select a option:", 9, 50, self.constants.REPOSITORIES_MENU_OPTIONS, "Repositories Menu")
-		self.switch_repositories_menu(int(option))
+		try:
+			option = self.dialog.create_menu("Select a option:", 9, 50, self.constants.REPOSITORIES_MENU_OPTIONS, "Repositories Menu")
+			if option:
+				self.switch_repositories_menu(int(option))
+		except KeyboardInterrupt:
+			pass
 
 
 	def switch_main_menu(self, option: int) -> None:
@@ -87,7 +101,7 @@ class SnapTool:
 			case 7:
 				self.display_about()
 			case 8:
-				exit(1)
+				exit(0)
 
 
 	def switch_snapshots_menu(self, option: int) -> None:
@@ -97,18 +111,17 @@ class SnapTool:
 		Parameters:
     		option (int): Chosen option.
 		"""
-		snapshots = Snapshots()
 		match option:
 			case 1:
-				snapshots.create_snapshot()
+				self.snapshots.create_snapshot()
 			case 2:
-				snapshots.delete_snapshot()
+				self.snapshots.delete_snapshot()
 			case 3:
-				snapshots.restore_snapshot()
+				self.snapshots.restore_snapshot()
 			case 4:
-				snapshots.delete_inventories()
+				self.snapshots.mount_searchable_snapshot()
 			case 5:
-				snapshots.get_snapshot_status()
+				self.snapshots.get_snapshot_status()
 
 
 	def switch_indexes_menu(self, option: int) -> None:
@@ -118,10 +131,9 @@ class SnapTool:
 		Parameters:
     		option (int): Chosen option.
 		"""
-		indexes = Indexes()
 		match option:
 			case 1:
-				indexes.delete_indexes()
+				self.indexes.delete_indexes()
 
 
 	def switch_repositories_menu(self, option: int) -> None:
@@ -131,12 +143,11 @@ class SnapTool:
 		Parameters:
     		option (int): Chosen option.
 		"""
-		repositories = Repositories()
 		match option:
 			case 1:
-				repositories.create_repository()
+				self.repositories.create_repository()
 			case 2:
-				repositories.delete_repositories()
+				self.repositories.delete_repositories()
 
 
 	def define_es_configuration(self) -> None:
@@ -160,7 +171,7 @@ class SnapTool:
 		es_data.define_es_host()
 		es_data.define_verificate_certificate()
 		es_data.define_use_authentication(self.constants.KEY_FILE)
-		es_data.create_file(es_data.convert_object_to_dict(), self.constants.ES_CONFIGURATION, self.constants.LOG_FILE)
+		es_data.create_file(es_data.convert_object_to_dict(), self.constants.ES_CONFIGURATION, self.constants.LOG_FILE, self.constants.USER, self.constants.GROUP)
 
 
 	def modify_es_configuration(self) -> None:
@@ -168,7 +179,7 @@ class SnapTool:
 		Method that updates the configuration for the connection between ElasticSearch and Snap-Tool.
 		"""
 		es_data = libPyConfiguration(self.constants.BACKTITLE)
-		es_data.modify_configuration(self.constants.ES_CONFIGURATION, self.constants.KEY_FILE, self.constants.LOG_FILE)
+		es_data.modify_configuration(self.constants.ES_CONFIGURATION, self.constants.KEY_FILE, self.constants.LOG_FILE, self.constants.USER, self.constants.GROUP)
 
 
 	def display_es_configuration(self) -> None:
@@ -176,7 +187,7 @@ class SnapTool:
 		Method that displays the configuration for the connection between ElasticSearch and Snap-Tool.
 		"""
 		es_data = libPyConfiguration(self.constants.BACKTITLE)
-		es_data.display_configuration(self.constants.ES_CONFIGURATION, self.constants.LOG_FILE)
+		es_data.display_configuration(self.constants.ES_CONFIGURATION, self.constants.LOG_FILE, self.constants.USER, self.constants.GROUP)
 
 
 	def define_configuration(self) -> None:
@@ -240,7 +251,10 @@ class SnapTool:
 					text += f"- {nodes_info[node]["name"]}\n"
 					total_size_disk = nodes_info[node]["fs"]["total"]["total_in_bytes"]
 					total_size_available_disk = nodes_info[node]["fs"]["total"]["available_in_bytes"]
-					total_size_occupied_in_percentage = 100 - (total_size_available_disk * 100 / total_size_disk)
+					if total_size_disk > 0:
+						total_size_occupied_in_percentage = 100 - (total_size_available_disk * 100 / total_size_disk)
+					else:
+						total_size_occupied_in_percentage = 0
 					text += f"Occupied percentage: {round(total_size_occupied_in_percentage, 2)}%\n\n"
 				conn_es.transport.close()
 				self.dialog.create_scrollbox(text, 16, 70, "Nodes information")
@@ -248,8 +262,6 @@ class SnapTool:
 				self.dialog.create_message("\nES Configuration file not found.", 7, 50, "Error Message")
 		except KeyboardInterrupt:
 			pass
-		finally:
-			raise KeyboardInterrupt("Error")
 
 
 	def display_about(self) -> None:
@@ -257,9 +269,7 @@ class SnapTool:
 		Method that displays the about of the application.
 		"""
 		try:
-			text = "\nAuthor: Erick Roberto Rodríguez Rodríguez\nEmail: erickrr.tbd93@gmail.com, erodriguez@tekium.mx\nGithub: https://github.com/erickrr-bd/Snap-Tool\nSnap-Tool v3.4 - November 2025" + "\n\nModular toolkit for managing Elasticsearch snapshots,\nrepositories, and indexes via Python."
+			text = "\nAuthor: Erick Roberto Rodríguez Rodríguez\nEmail: erickrr.tbd93@gmail.com, erodriguez@tekium.mx\nGithub: https://github.com/erickrr-bd/Snap-Tool\nSnap-Tool v3.4.1 - July 2026" + "\n\nModular toolkit for managing Elasticsearch snapshots,\nrepositories, and indexes via Python."
 			self.dialog.create_scrollbox(text, 13, 60, "About")
 		except KeyboardInterrupt:
 			pass
-		finally:
-			raise KeyboardInterrupt("Error")
